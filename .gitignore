@@ -11,6 +11,9 @@ nupkg/
 # Rider
 .idea
 
+# Personal
+Notes.MD
+
 # User-specific files
 *.suo
 *.user

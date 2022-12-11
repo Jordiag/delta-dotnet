@@ -1,4 +1,4 @@
-﻿namespace DeltaLake.Research.App.Example1.Add
+﻿namespace DeltaLake.TransactionLog.Add
 {
     public class Tags
     {

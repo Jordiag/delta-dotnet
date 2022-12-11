@@ -1,4 +1,4 @@
-﻿namespace DeltaLake.Research.App.Example1.Protocol
+﻿namespace DeltaLake.TransactionLog.Protocol
 {
 public class Protocol
 {

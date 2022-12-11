@@ -4,7 +4,7 @@ namespace DeltaLake.TransactionLog.Metadata
 {
     public class Format
     {
-        [JsonPropertyName("providern")]
+        [JsonPropertyName("provider")]
         public string Provider { get; set; }
 
         [JsonPropertyName("options")]

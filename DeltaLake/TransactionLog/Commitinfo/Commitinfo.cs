@@ -1,4 +1,4 @@
-﻿namespace DeltaLake.Research.App.Example1.Commitinfo
+﻿namespace DeltaLake.TransactionLog.Commitinfo
 {
     public class Commitinfo
     {
