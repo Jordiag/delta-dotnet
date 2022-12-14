@@ -36,6 +36,9 @@
     <None Update="Data\delta-0.8.0\.part-00001-911a94a2-43f6-4acb-8620-5e68c2654989-c000.snappy.parquet.crc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\delta-0.8.0\New folder\New Text Document.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\delta-0.8.0\part-00000-04ec9591-0b73-459e-8d18-ba5711d6cbe1-c000.snappy.parquet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -43,6 +46,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\delta-0.8.0\part-00001-911a94a2-43f6-4acb-8620-5e68c2654989-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0\_change_data\.gitkeep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0\_delta_index\.gitkeep">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\delta-0.8.0\_delta_log\00000000000000000000.json">

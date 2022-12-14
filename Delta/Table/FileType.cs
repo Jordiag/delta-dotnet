@@ -1,11 +1,19 @@
 ﻿namespace Delta.Table
 {
-   public enum FileType
+   public enum FileExtension
    {
       Crc,
       Parquet,
       Json,
+      None,
       Unknown,
-      LastCheckpoint
+
+   }
+   public enum Level2Extension
+   {
+      Crc,
+      Data,
+      CheckPoint,
+      LastCheckPoint
    }
 }

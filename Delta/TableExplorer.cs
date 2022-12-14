@@ -1,6 +1,4 @@
 ﻿using Delta.Table;
-using System.IO;
-using System.Xml.Linq;
 
 namespace Delta
 {
@@ -20,90 +18,114 @@ namespace Delta
       public void WalkDirectoryTree(DirectoryInfo root)
       {
          folderLevel++;
-         FileInfo[] files = null;
          DirectoryInfo[] subDirs = null;
 
-         // First, process all the files directly under this folder
+         if(root.Name == Constants.DeltaLogFolder)
+         {
+            if (folderLevel != 2)
+            {
+               throw new DeltaException("Error trying to get files regarding unauthorised access.");
+            }
+            ProcessDeltaLogFolder(root);
+         }
+
+         ProcessFolderFiles(root, ref _tableFolder, folderLevel);
+
+         // Now find all the subdirectories under this directory.
+         subDirs = root.GetDirectories();
+
+         bool noUnderScoreFolderExist = !subDirs.All(subdir => subdir.Name.StartsWith("_"));
+
+         if (folderLevel == 1 && _tableFolder.DataFileList.Length > 1 && noUnderScoreFolderExist)
+         {
+            throw new DeltaException("Root folder can't contain data folders if there are already data files.");
+         }
+
+         foreach(DirectoryInfo dirInfo in subDirs)
+         {
+            // Resursive call for each subdirectory.
+            WalkDirectoryTree(dirInfo);
+         }
+
+         // TODO me quede en procesar el deltalog folder y que hacer ahora con change y delta_index folder
+      }
+
+      private void ProcessFolderFiles(DirectoryInfo root, ref TableFolder tableFolder, int folderLevel) {
+         FileInfo[] files = null;
          try
          {
             files = root.GetFiles("*.*");
          }
-         // This is thrown if even one of the files requires permissions greater
-         // than the application provides.
          catch(UnauthorizedAccessException e)
          {
-            // This code just writes out the message and continues to recurse.
-            // You may decide to do something different here. For example, you
-            // can try to elevate your privileges and access the file again.
-            ///log.Add(e.Message);
+            throw new DeltaException("Error trying to get files regarding unauthorised access.", e);
          }
 
          catch(System.IO.DirectoryNotFoundException e)
          {
-            Console.WriteLine(e.Message);
+            throw new DeltaException("Error trying to get files regarding directory not found.", e);
          }
 
          if(files != null)
          {
-            DataFile[] dataFileList = new DataFile[files.Length];
+            DataFile[] dataFileList = new DataFile[files.Count(file => file.Extension == Constants.CrcExtension)];
+            CrcFile[] crcFileList = new CrcFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
+            uint dataFileCounter = 0;
+            uint crcFilecounter = 0;
             for(int counter = 0; counter < files.Length; counter++)
             {
                FileInfo file = files[counter];
-               FileType fileType = FileType.Unknown;
 
-               if (folderLevel == 1)
+               if(folderLevel == 1) // we can have DataFiles and CrcFiles Only, if they are there, no other data folders must exist
                {
-                  switch (file.Extension.ToLower()) {
-                     case ".crc":
-                        fileType = FileType.Crc;
+                  (long partIndex, Guid guid, CompressionType compressionType) fileInfo = GetFileInfo(file.Name, file.Extension);
+
+                  switch(file.Extension.ToLower())
+                  {
+                     case Constants.CrcExtension:
+                        var crcFile = new CrcFile(fileInfo.partIndex, fileInfo.guid.ToString(), file.Length);
+                        crcFileList[dataFileCounter] = crcFile;
+                        dataFileCounter++;
                         break;
-                     case ".parquet":
-                        fileType = FileType.Parquet;
+                     case Constants.ParquetExtension:
+                        var dataFile = new DataFile(fileInfo.partIndex, fileInfo.guid.ToString(), fileInfo.compressionType, file.Length);
+                        dataFileList[crcFilecounter] = dataFile;
+                        crcFilecounter++;
                         break;
                      default:
-                        break;
+                        throw new DeltaException("Error file extension not recognised as root folder file.");
                   }
-                  (long partIndex, Guid guid, bool isCheckpoint, CompressionType compressionType) fileInfo = 
-                     GetFileInfo(file.Name, fileType);
-                  DataFile dataFile = 
-                     new DataFile(
-                        fileInfo.partIndex, 
-                        fileInfo.guid.ToString(), 
-                        fileType, 
-                        fileInfo.isCheckpoint, 
-                        fileInfo.compressionType);
-                  dataFileList[counter] = dataFile;
+
                }
             }
-            _tableFolder.DataFileList = dataFileList.ToArray();
-
-      // Now find all the subdirectories under this directory.
-      subDirs = root.GetDirectories();
-
-            foreach(System.IO.DirectoryInfo dirInfo in subDirs)
-            {
-               // Resursive call for each subdirectory.
-               WalkDirectoryTree(dirInfo);
-            }
+            tableFolder.DataFileList = dataFileList.ToArray();
+            tableFolder.CrcFileList = crcFileList.ToArray();
          }
       }
 
-      private (long partIndex, Guid guid, bool isCheckpoint, CompressionType compressionType) 
-         GetFileInfo(string name, FileType fileType)
+      private void ProcessDeltaLogFolder(DirectoryInfo root)
       {
-         name = name.Substring(1, name.Length - fileType.ToString().Length - 2);
+      }
+
+      private (long partIndex, Guid guid, CompressionType compressionType) 
+         GetFileInfo(string name, string fileExtension)
+      {
+         name = name.Substring(0, name.Length - fileExtension.Length);
          string[] namePointParts = name.Split('.');
-         string[] nameMinusParts = namePointParts[0].Split('-');
+         int infoIndex = string.IsNullOrEmpty(namePointParts[0]) ? 1 : 0;
+         string[] nameMinusParts = namePointParts[infoIndex].Split('-');
+
          if(nameMinusParts[0] == "part")
          {
             switch(namePointParts.Length)
             {
                case 1:
-                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), false, CompressionType.Uncompressed);
+                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), CompressionType.Uncompressed);
                case 2:
-                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), false, ExtractCompression(namePointParts[1]));
                case 3:
-                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), false, ExtractCompression(namePointParts[1]));
+                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1]));
+               case 4:
+                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2]));
                default:
                   throw new DeltaException($"This parquet part file '{name}' has more dots than expected.");
             }

@@ -1,20 +1,10 @@
 ﻿namespace Delta.Table
 {
-   public class DataFile
+   internal class DataFile : TableFile
    {
-      public long PartIndex { get; }
-      public string Guid { get; }
-      public FileType FileType { get; }
-      public bool IsCheckpoint { get; }
       public CompressionType CompressionType { get; }
 
-      public DataFile(long partIndex, string guid, FileType fileType, bool isCheckpoint, CompressionType compressionType)
-      {
-         PartIndex = partIndex;
-         Guid = guid;
-         FileType = fileType;
-         IsCheckpoint = isCheckpoint;
-         CompressionType = compressionType;
-      }
+      public DataFile(long partIndex, string guid, CompressionType compressionType, long byteSize) :
+         base(partIndex, guid, byteSize) => CompressionType = compressionType;
    }
 }
