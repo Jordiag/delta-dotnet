@@ -1,4 +1,4 @@
-﻿namespace Delta
+﻿namespace Delta.Common
 {
    /// <summary>
    /// Parquet format specific

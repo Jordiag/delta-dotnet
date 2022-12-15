@@ -1,135 +1,176 @@
-﻿using Delta.Table;
+﻿using System.Runtime;
+using Delta.Common;
+using Delta.Table;
 
 namespace Delta
 {
    public class TableExplorer
    {
-      private int folderLevel = 0;
-      private TableFolder _tableFolder = null;
+      public TableFolder TableFolder { get; }
+      private FolderType currentFolderType = FolderType.Root;
+      private readonly DeltaOptions _deltaOptions;
+      private readonly List<IgnoredFile> _ignoredFileList;
+      private readonly List<IgnoredFolder> _ignoredFolderList;
 
-      public TableFolder ReadDeltaFolderStructure(string basePath)
+      public TableExplorer(string basePath, DeltaOptions deltaOptions)
       {
-         _tableFolder = new TableFolder(basePath);
-         WalkDirectoryTree(new DirectoryInfo(_tableFolder.RootPath));
-
-         return _tableFolder;
+         TableFolder = new TableFolder(basePath);
+         _deltaOptions = deltaOptions;
+         _ignoredFolderList = new List<IgnoredFolder>();
+         _ignoredFileList = new List<IgnoredFile>();
       }
 
-      public void WalkDirectoryTree(DirectoryInfo root)
+      public void ReadDeltaFolderStructure()
       {
-         folderLevel++;
-         DirectoryInfo[] subDirs = null;
+         WalkDeltaTree(new DirectoryInfo(TableFolder.RootPath));
+      }
 
-         if(root.Name == Constants.DeltaLogFolder)
+      private void WalkDeltaTree(DirectoryInfo DirectoryInfo)
+      {
+         DirectoryInfo[] subDirs = Array.Empty<DirectoryInfo>();
+
+         switch(currentFolderType)
          {
-            if (folderLevel != 2)
-            {
-               throw new DeltaException("Error trying to get files regarding unauthorised access.");
-            }
-            ProcessDeltaLogFolder(root);
-         }
-
-         ProcessFolderFiles(root, ref _tableFolder, folderLevel);
-
-         // Now find all the subdirectories under this directory.
-         subDirs = root.GetDirectories();
-
-         bool noUnderScoreFolderExist = !subDirs.All(subdir => subdir.Name.StartsWith("_"));
-
-         if (folderLevel == 1 && _tableFolder.DataFileList.Length > 1 && noUnderScoreFolderExist)
-         {
-            throw new DeltaException("Root folder can't contain data folders if there are already data files.");
+            case FolderType.DeltaLog:
+               ProcessDeltaLogFolder(DirectoryInfo, ref subDirs);
+               break;
+            case FolderType.Root:
+               ProcessRootFolder(DirectoryInfo, ref subDirs);
+               break;
+            case FolderType.PartitionData:
+               ProcessRootFolder(DirectoryInfo, ref subDirs);
+               break;
+            case FolderType.Unknown:
+               if(!_deltaOptions.StrictTableParsing)
+               {
+                  var ignoredFolder = new IgnoredFolder(DirectoryInfo.FullName);
+                  _ignoredFolderList.Add(ignoredFolder);
+               }
+               throw new DeltaException($"Unknown type of folder: {DirectoryInfo.FullName}.");
+             default:
+               break;
          }
 
          foreach(DirectoryInfo dirInfo in subDirs)
          {
-            // Resursive call for each subdirectory.
-            WalkDirectoryTree(dirInfo);
+            currentFolderType = GetCurrentFolderType(dirInfo);
+            WalkDeltaTree(dirInfo);
          }
-
-         // TODO me quede en procesar el deltalog folder y que hacer ahora con change y delta_index folder
       }
 
-      private void ProcessFolderFiles(DirectoryInfo root, ref TableFolder tableFolder, int folderLevel) {
-         FileInfo[] files = null;
+      private void ProcessRootFolder(DirectoryInfo directoryInfo, ref DirectoryInfo[]  subDirs)
+      {
+         ProcessRootFolderFiles(directoryInfo);
+         subDirs = directoryInfo.GetDirectories();
+         bool noUnderScoreFolderExist = !subDirs.All(subdir => subdir.Name.StartsWith("_"));
+
+         if(currentFolderType == FolderType.Root && TableFolder.DataFileList.Length > 1 && noUnderScoreFolderExist)
+         {
+            throw new DeltaException("Root folder can't contain data folders if there are already data files.");
+         }
+      }
+
+      private static FolderType GetCurrentFolderType(DirectoryInfo dirInfo)
+      {
+         return dirInfo.Name switch
+         {
+            Constants.DeltaLogFolder => FolderType.DeltaIndex,
+            Constants.DeltaIndexFolder => FolderType.DeltaIndex,
+            Constants.ChangeDataFolder => FolderType.ChangeData,
+            _ => IsPartitionDataFoder(dirInfo.Name) ? FolderType.PartitionData : FolderType.Unknown,
+         };
+      }
+
+      private static bool IsPartitionDataFoder(string name)
+      {
+         return name.Contains('=') && name.Split('=').Length == 2;
+      }
+
+      private void ProcessRootFolderFiles(DirectoryInfo directoryInfo) 
+      {
+         FileInfo[] files = GetFiles(directoryInfo);
+
+         if(files != null)
+         {
+            var dataFileList = new DataFile[files.Count(file => file.Extension == Constants.CrcExtension)];
+            var crcFileList = new CrcFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
+            uint dataFileCounter = 0;
+            uint crcFilecounter = 0;
+            for(int counter = 0; counter < files.Length; counter++)
+            {
+               FileInfo file = files[counter];
+               (long partIndex, Guid guid, CompressionType compressionType) fileInfo = GetFileInfo(file.Name, file.Extension);
+
+               switch(file.Extension)
+               {
+                  case Constants.CrcExtension:
+                     var crcFile = new CrcFile(fileInfo.partIndex, fileInfo.guid.ToString(), file.Length);
+                     crcFileList[dataFileCounter] = crcFile;
+                     dataFileCounter++;
+                     break;
+                  case Constants.ParquetExtension:
+                     var dataFile = new DataFile(fileInfo.partIndex, fileInfo.guid.ToString(), fileInfo.compressionType, file.Length);
+                     dataFileList[crcFilecounter] = dataFile;
+                     crcFilecounter++;
+                     break;
+                  default:
+                     if(_deltaOptions.StrictRootFolderParsing)
+                     {
+                        throw new DeltaException("Error file extension not recognised as root folder file.");
+                     }
+                     else
+                     {
+                        IgnoredFile ignoredFile  = new IgnoredFile(file.FullName);
+                        _ignoredFileList.Add(ignoredFile);
+                     }
+                  break;
+               }
+            }
+            TableFolder.DataFileList = dataFileList.ToArray();
+            TableFolder.CrcFileList = crcFileList.ToArray();
+         }
+      }
+
+      private FileInfo[] GetFiles(DirectoryInfo directoryInfo)
+      {
+         FileInfo[] files = Array.Empty<FileInfo>();
          try
          {
-            files = root.GetFiles("*.*");
+            files = directoryInfo.GetFiles("*.*");
          }
          catch(UnauthorizedAccessException e)
          {
             throw new DeltaException("Error trying to get files regarding unauthorised access.", e);
          }
 
-         catch(System.IO.DirectoryNotFoundException e)
+         catch(DirectoryNotFoundException e)
          {
             throw new DeltaException("Error trying to get files regarding directory not found.", e);
          }
 
-         if(files != null)
-         {
-            DataFile[] dataFileList = new DataFile[files.Count(file => file.Extension == Constants.CrcExtension)];
-            CrcFile[] crcFileList = new CrcFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
-            uint dataFileCounter = 0;
-            uint crcFilecounter = 0;
-            for(int counter = 0; counter < files.Length; counter++)
-            {
-               FileInfo file = files[counter];
-
-               if(folderLevel == 1) // we can have DataFiles and CrcFiles Only, if they are there, no other data folders must exist
-               {
-                  (long partIndex, Guid guid, CompressionType compressionType) fileInfo = GetFileInfo(file.Name, file.Extension);
-
-                  switch(file.Extension.ToLower())
-                  {
-                     case Constants.CrcExtension:
-                        var crcFile = new CrcFile(fileInfo.partIndex, fileInfo.guid.ToString(), file.Length);
-                        crcFileList[dataFileCounter] = crcFile;
-                        dataFileCounter++;
-                        break;
-                     case Constants.ParquetExtension:
-                        var dataFile = new DataFile(fileInfo.partIndex, fileInfo.guid.ToString(), fileInfo.compressionType, file.Length);
-                        dataFileList[crcFilecounter] = dataFile;
-                        crcFilecounter++;
-                        break;
-                     default:
-                        throw new DeltaException("Error file extension not recognised as root folder file.");
-                  }
-
-               }
-            }
-            tableFolder.DataFileList = dataFileList.ToArray();
-            tableFolder.CrcFileList = crcFileList.ToArray();
-         }
+         return files;
       }
 
-      private void ProcessDeltaLogFolder(DirectoryInfo root)
+      private void ProcessDeltaLogFolder(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs)
       {
       }
 
-      private (long partIndex, Guid guid, CompressionType compressionType) 
-         GetFileInfo(string name, string fileExtension)
+      private (long partIndex, Guid guid, CompressionType compressionType) GetFileInfo(string name, string fileExtension)
       {
          name = name.Substring(0, name.Length - fileExtension.Length);
          string[] namePointParts = name.Split('.');
          int infoIndex = string.IsNullOrEmpty(namePointParts[0]) ? 1 : 0;
          string[] nameMinusParts = namePointParts[infoIndex].Split('-');
 
-         if(nameMinusParts[0] == "part")
+         if(nameMinusParts[0] == Constants.PartText)
          {
-            switch(namePointParts.Length)
+            return namePointParts.Length switch
             {
-               case 1:
-                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), CompressionType.Uncompressed);
-               case 2:
-               case 3:
-                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1]));
-               case 4:
-                  return (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2]));
-               default:
-                  throw new DeltaException($"This parquet part file '{name}' has more dots than expected.");
-            }
-
+               1 => (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), CompressionType.Uncompressed),
+               2 or 3 => (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1])),
+               4 => (long.Parse(nameMinusParts[1]), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2])),
+               _ => throw new DeltaException($"This parquet part file '{name}' has more dots than expected."),
+            };
          }
          else
          {
@@ -138,17 +179,17 @@ namespace Delta
 
       }
 
-      private Guid ExtractGuid(string[] nameParts)
+      private static Guid ExtractGuid(string[] nameParts)
       {
          string guidString = $"{nameParts[2]}-{nameParts[3]}-{nameParts[4]}-{nameParts[5]}-{nameParts[6]}";
          return Guid.Parse(guidString);
       }
 
-      private CompressionType ExtractCompression(string compressionText)
+      private static CompressionType ExtractCompression(string compressionText)
       {
          switch(compressionText)
          {
-            case "snappy":
+            case Constants.SnappyCompression:
                return CompressionType.Snappy;
             default:
                throw new DeltaException($"compression not yet supported in this nuget library: '{compressionText}'.");
