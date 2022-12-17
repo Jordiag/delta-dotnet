@@ -24,7 +24,7 @@ namespace Delta.Table
       DeltaLog,
       DeltaIndex,
       ChangeData, 
-      PartitionData,
+      Partition,
       Unknown
    }
 }

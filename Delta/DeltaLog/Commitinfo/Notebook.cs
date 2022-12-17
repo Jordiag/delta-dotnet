@@ -1,4 +1,4 @@
-﻿namespace Delta.TransactionLog.Commitinfo
+﻿namespace Delta.DeltaLog.Commitinfo
 {
     public class Notebook
     {

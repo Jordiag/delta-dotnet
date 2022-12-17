@@ -1,10 +1,10 @@
-﻿namespace Delta.Common
+﻿namespace Delta.Table
 {
-   public class IgnoredFolder
+   public class IgnoredFile
    {
       public string FullName { get; }
 
-      public IgnoredFolder(string fullName)
+      public IgnoredFile(string fullName)
       {
          FullName = fullName;
       }

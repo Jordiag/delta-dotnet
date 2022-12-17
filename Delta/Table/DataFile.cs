@@ -4,7 +4,7 @@
    {
       public CompressionType CompressionType { get; }
 
-      public DataFile(long partIndex, string guid, CompressionType compressionType, long byteSize) :
-         base(partIndex, guid, byteSize) => CompressionType = compressionType;
+      public DataFile(long partIndex, string guid, CompressionType compressionType, long byteSize, string name) :
+         base(partIndex, guid, byteSize, name) => CompressionType = compressionType;
    }
 }

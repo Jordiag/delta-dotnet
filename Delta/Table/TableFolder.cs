@@ -1,14 +1,20 @@
 ﻿namespace Delta.Table
 {
-   public class TableFolder
+   internal class TableFolder
    {
-      public string RootPath { get; }
+      internal string RootPath { get; }
+      internal LogFolder DeltaLogFolder { get; }
+      internal DataFile[] DataFileList { get; }
+      internal DataCrcFile[] CrcFileList { get; }
+      internal List<PartitionFolder> PartitionFolderList { get; }
 
-      public TableLogFolder DeltaLogFolder { get; set; }
-      internal DataFile[] DataFileList { get; set; }
-      internal CrcFile[] CrcFileList { get; set; }
-      public PartitionFolder[] PartitionFolderList { get; set; }
-
-      public TableFolder(string fullPath) => RootPath = fullPath;
+      internal TableFolder(string rootPath, LogFolder deltaLogFolder, DataFile[] dataFileList, DataCrcFile[] crcFileList, List<PartitionFolder> partitionFolderList)
+      {
+         RootPath = rootPath;
+         DeltaLogFolder = deltaLogFolder;
+         DataFileList = dataFileList;
+         CrcFileList = crcFileList;
+         PartitionFolderList = partitionFolderList;
+      }
    }
 }

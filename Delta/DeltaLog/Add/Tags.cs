@@ -1,4 +1,4 @@
-﻿namespace Delta.TransactionLog.Add
+﻿namespace Delta.DeltaLog.Add
 {
     public class Tags
     {

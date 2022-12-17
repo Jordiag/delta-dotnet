@@ -27,6 +27,108 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Data\delta-0.2.0\.part-00000-512e1537-8aaa-4193-b8b4-bef3de0de409-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\.part-00000-7c2deba3-1994-4fb8-bc07-d46c948aa415-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\.part-00000-b44fcdb0-8b06-4f3a-8606-f8311a96f6dc-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\.part-00000-cb6b150b-30b8-4662-ad28-ff32ddab96d2-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\.part-00001-185eca06-e017-4dea-ae49-fc48b973e37e-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\.part-00001-4327c977-2734-4477-9507-7ccf67924649-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\.part-00001-c373a5bd-85f0-4758-815e-7eb62007a15c-c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00000-512e1537-8aaa-4193-b8b4-bef3de0de409-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00000-7c2deba3-1994-4fb8-bc07-d46c948aa415-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00000-b44fcdb0-8b06-4f3a-8606-f8311a96f6dc-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00000-cb6b150b-30b8-4662-ad28-ff32ddab96d2-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00001-185eca06-e017-4dea-ae49-fc48b973e37e-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00001-4327c977-2734-4477-9507-7ccf67924649-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\part-00001-c373a5bd-85f0-4758-815e-7eb62007a15c-c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\..00000000000000000000.json.c6b312ca-665d-46ab-93a9-9f87ad2baa92.tmp.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\..00000000000000000001.json.641a776e-6e56-4423-a9b0-7efc9e58826a.tmp.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\..00000000000000000002.json.e64807e6-437c-44c9-abd2-50e6514d236e.tmp.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\..00000000000000000003.json.b374eda7-fa09-48ce-b06c-56025163f6ae.tmp.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\.._last_checkpoint.477ba875-7a14-4e57-9973-1349c21a152c.tmp.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\.00000000000000000003.checkpoint.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\00000000000000000000.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\00000000000000000001.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\00000000000000000002.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\00000000000000000003.checkpoint.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\00000000000000000003.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.2.0\_delta_log\_last_checkpoint">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\year=2020\month=1\day=1\.part-00000-8eafa330-3be9-4a39-ad78-fd13c2027c7e.c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\year=2020\month=1\day=1\part-00000-8eafa330-3be9-4a39-ad78-fd13c2027c7e.c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\year=2020\month=2\day=3\.part-00000-94d16827-f2fd-42cd-a060-f67ccc63ced9.c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\year=2020\month=2\day=3\part-00000-94d16827-f2fd-42cd-a060-f67ccc63ced9.c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\year=2020\month=2\day=5\.part-00000-89cdd4c8-2af7-4add-8ea3-3990b2f027b5.c000.snappy.parquet.crc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\year=2020\month=2\day=5\part-00000-89cdd4c8-2af7-4add-8ea3-3990b2f027b5.c000.snappy.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-partitioned\_delta_log\00000000000000000000.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\delta-0.8.0-special-partition\_delta_log\00000000000000000000.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\delta-0.8.0\.part-00000-04ec9591-0b73-459e-8d18-ba5711d6cbe1-c000.snappy.parquet.crc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

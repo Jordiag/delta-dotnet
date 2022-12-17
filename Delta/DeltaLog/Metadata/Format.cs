@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Delta.TransactionLog.Metadata
+namespace Delta.DeltaLog.Metadata
 {
     public class Format
     {
