@@ -12,10 +12,7 @@ namespace Delta
       private readonly DeltaOptions _deltaOptions;
 
       private PartitionFolder partitionFolderStructure;
-
-      private PartitionFolder previousParentPartitionFolder;
       private PartitionFolder currentParentPartitionFolder;
-
       private readonly TableFolder tableFolder;
 
       private readonly Regex onlyNumbersRegex = new Regex(@"^[0-9]+$");
@@ -46,7 +43,7 @@ namespace Delta
                tableFolder.LoadRootDataTable(rootResult.dataFileList, rootResult.crcFileList, rootResult.IgnoredFileList);
                break;
             case FolderType.Partition:
-               currentParentPartitionFolder = ProcessPartitionFolder(directoryInfo, ref subDirs);
+               ProcessPartitionFolder(directoryInfo, ref subDirs);
                break;
             case FolderType.Unknown:
                if(!_deltaOptions.StrictTableParsing)
@@ -66,9 +63,10 @@ namespace Delta
          }
       }
 
-      private PartitionFolder? ProcessPartitionFolder(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs)
+      // TODO are all files and folder ignored captured?
+
+      private void ProcessPartitionFolder(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs)
       {
-         PartitionFolder? partitionFolder = null;
          FileInfo[] files = GetFiles(directoryInfo);
          subDirs = directoryInfo.GetDirectories();
 
@@ -86,8 +84,8 @@ namespace Delta
             string[] nameSplit = directoryInfo.Name.Split('=');
             string key = nameSplit[0];
             string value = nameSplit[1];
-            partitionFolder = new PartitionFolder(parent, key, value);
-            AddToHeirachy(directoryInfo, partitionFolder);
+            PartitionFolder partitionFolder = new PartitionFolder(parent, key, value);
+            AddToHeirachy(directoryInfo, ref partitionFolder);
          }
          else if(files.Length > 0 && subDirs.Length == 0)
          {
@@ -95,21 +93,20 @@ namespace Delta
             string[] nameSplit = directoryInfo.Name.Split('=');
             string key = nameSplit[0];
             string value = nameSplit[1];
-            string parent = $"{currentParentPartitionFolder.Key}={currentParentPartitionFolder.Value}";
-            currentParentPartitionFolder =
-               new PartitionFolder(
-                  $"{currentParentPartitionFolder}\\{parent}",
+            string parent = GetParent(directoryInfo, tableFolder.BasePath);
+            PartitionFolder partitionFolder = new PartitionFolder(
+                  parent,
                   key,
                   value,
                   dataFolderResult.dataFileList,
                   dataFolderResult.crcFileList);
+            AddToHeirachy(directoryInfo, ref partitionFolder);
          }
-         return partitionFolder;
       }
 
       IEnumerable<PartitionFolder> GetChildren(PartitionFolder x)
       {
-         foreach(PartitionFolder rChild in x.FolderList.SelectMany(child => GetChildren(child)))
+         foreach(PartitionFolder rChild in x.FolderList.SelectMany(GetChildren))
          {
             yield return rChild;
          }
@@ -124,7 +121,7 @@ namespace Delta
          return parent;
       }
 
-      private void AddToHeirachy(DirectoryInfo directoryInfo, PartitionFolder partitionFolder)
+      private void AddToHeirachy(DirectoryInfo directoryInfo, ref PartitionFolder partitionFolder)
       {
          if(partitionFolderStructure == null)
          {
@@ -134,9 +131,7 @@ namespace Delta
          else
          {
             string parentName = GetParentName(directoryInfo.FullName);
-            PartitionFolder? parentFolder = partitionFolderStructure.FolderList
-               .Where(folder => $"{folder.Key}={folder.Value}" == parentName).SingleOrDefault();
-               //.SelectMany(folder => GetChildren(folder)).SingleOrDefault();
+            PartitionFolder? parentFolder = GetParentFolder(partitionFolderStructure, parentName);
 
             if (parentFolder == null)
             {
@@ -146,8 +141,29 @@ namespace Delta
             {
                parentFolder?.FolderList.Add(partitionFolder);
             }
-
          }
+      }
+
+      private PartitionFolder? GetParentFolder(PartitionFolder folder, string parentName)
+      {
+         if (folder == null)
+         {
+            return null;
+         }
+         if(parentName == $"{folder.Key}={folder.Value}")
+         {
+            return folder;
+         }
+         foreach (PartitionFolder currentFolder in folder.FolderList)
+         {
+            PartitionFolder? found = GetParentFolder(currentFolder, parentName);
+            if (found != null)
+            {
+               return found;
+            }
+         }
+
+         return null;
       }
 
       private string GetParent(DirectoryInfo directoryInfo, string basePath)
