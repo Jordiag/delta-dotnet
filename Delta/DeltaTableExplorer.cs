@@ -27,7 +27,7 @@ namespace Delta
          switch(currentFolderType)
          {
             case FolderType.DeltaLog:
-               LogFolder deltaLogResult = ProcessDeltaLog(directoryInfo);
+               Table.DeltaLog deltaLogResult = ProcessDeltaLog(directoryInfo);
                this.deltaTable.LoadDeltaLog(deltaLogResult);
                break;
             case FolderType.Root:
@@ -253,7 +253,7 @@ namespace Delta
          return files;
       }
 
-      private LogFolder ProcessDeltaLog(DirectoryInfo directoryInfo)
+      private Table.DeltaLog ProcessDeltaLog(DirectoryInfo directoryInfo)
       {
          FileInfo[] files = GetFiles(directoryInfo);
          var logCrcFiles = new LogCrcFile[files.Count(file => file.Extension == Constants.CrcExtension)];
@@ -288,7 +288,7 @@ namespace Delta
                }
             }
          }
-         var logFolder = new LogFolder(logCrcFiles, logFiles, checkPointFiles, lastCheckPointFile, ignoredFileList);
+         var logFolder = new Table.DeltaLog(logCrcFiles, logFiles, checkPointFiles, lastCheckPointFile, ignoredFileList);
 
          return logFolder;
       }

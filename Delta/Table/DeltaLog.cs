@@ -1,6 +1,6 @@
 ﻿namespace Delta.Table
 {
-   internal class LogFolder
+   internal class DeltaLog
    {
       internal LogCrcFile[] LogCrcFiles;
       internal LogFile[] LogFiles;
@@ -8,7 +8,7 @@
       internal LastCheckPointFile? LastCheckPointFiles;
       internal List<IgnoredFile> IgnoredFileList;
 
-      internal LogFolder(LogCrcFile[] logCrcFiles, LogFile[] logFiles, CheckPointFile[] checkPointFiles, LastCheckPointFile? lastCheckPointFiles, List<IgnoredFile> ignoredFileList)
+      internal DeltaLog(LogCrcFile[] logCrcFiles, LogFile[] logFiles, CheckPointFile[] checkPointFiles, LastCheckPointFile? lastCheckPointFiles, List<IgnoredFile> ignoredFileList)
       {
          LogCrcFiles = logCrcFiles;
          LogFiles = logFiles;
