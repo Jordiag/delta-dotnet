@@ -1,15 +1,15 @@
 ﻿namespace Delta.Table
 {
-   internal class PartitionFolder
+   internal class Partition
    {
-      internal List<PartitionFolder> FolderList = new();
+      internal List<Partition> PartitionList = new();
       internal string? Key { get; }
       internal string? Value { get; }
       internal DataFile[]? DataFileList { get; }
       internal DataCrcFile[]? CrcFileList { get; }
       internal string Parent { get; }
 
-      internal PartitionFolder(string parent, string? key = null, string? value = null, DataFile[]? dataFileList = null, DataCrcFile[]? crcFileList = null)
+      internal Partition(string parent, string? key = null, string? value = null, DataFile[]? dataFileList = null, DataCrcFile[]? crcFileList = null)
       {
          Key = key;
          Value = value;
