@@ -5,12 +5,9 @@ name: ".NET Test"
 
 on:
   workflow_run:
-    workflows: 
-      - ".NET Build"
-    types: 
-      - "completed"
-    branches:
-      - "initial-research"
+    workflows: [.NET build]
+    types: [requested]
+    branches: [initial-research]
 
 jobs:
   build:
