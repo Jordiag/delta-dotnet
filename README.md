@@ -12,7 +12,7 @@ Currently in [pre-alpha](https://en.wikipedia.org/wiki/Software_release_life_cyc
 
 | Build | Unit Tests | Static Analisis | Nuget |  
 |-------|------------|-----------------|-------|
-|   <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A yet   |    <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A  yet      |        <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A  yet       |    <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A yet  |
+|   [![.NET Build](https://github.com/Jordiag/delta-dotnet/actions/workflows/build.yml/badge.svg?branch=initial-research)](https://github.com/Jordiag/delta-dotnet/actions/workflows/build.yml)   |    <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A  yet      |        <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A  yet       |    <img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A yet  |
 
 ## Why
 
