@@ -11,7 +11,7 @@ namespace Delta
       public DeltaTableExplorer(string basePath, DeltaOptions deltaOptions)
       {
          _deltaOptions = deltaOptions;
-         DeltaTable = new DeltaTable(basePath);
+         DeltaTable = new DeltaTable(Path.Combine(basePath));
       }
       // TODO are all files and folder ignored captured?
 
@@ -28,12 +28,12 @@ namespace Delta
          {
             case FolderType.DeltaLog:
                Table.DeltaLog deltaLogResult = ProcessDeltaLog(directoryInfo);
-               this.DeltaTable.LoadDeltaLog(deltaLogResult);
+               DeltaTable.LoadDeltaLog(deltaLogResult);
                break;
             case FolderType.Root:
                (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) root =
                   ProcessRoot(directoryInfo, ref subDirectories, currentFolderType);
-               this.DeltaTable.LoadRootDataTable(root.dataFileList, root.crcFileList, root.IgnoredFileList);
+               DeltaTable.LoadRootDataTable(root.dataFileList, root.crcFileList, root.IgnoredFileList);
                break;
             case FolderType.Partition:
                ProcessPartitionFolder(directoryInfo, ref subDirectories, deltaTable.Partitions);
@@ -42,7 +42,7 @@ namespace Delta
                if(!_deltaOptions.StrictTableParsing)
                {
                   var ignoredFolder = new IgnoredFolder(directoryInfo.FullName);
-                  this.DeltaTable.AddIgnoredFolder(ignoredFolder);
+                  DeltaTable.AddIgnoredFolder(ignoredFolder);
                }
                throw new DeltaException($"Unknown type of folder: {directoryInfo.FullName}.");
             default:
