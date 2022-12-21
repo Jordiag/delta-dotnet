@@ -8,7 +8,7 @@ Delta lake for .NET (or delta-dotnet) is a .NET native, high-performance, [delta
 
 ## Status
 
-Currently in [pre-alpha](https://en.wikipedia.org/wiki/Software_release_life_cycle#Pre-alpha) release stage located in the [initial-reseach branch](https://github.com/Jordiag/delta-dotnet/tree/initial-research).
+Currently in [pre-alpha](https://en.wikipedia.org/wiki/Software_release_life_cycle#Pre-alpha) release stage located in the [initial-research branch](https://github.com/Jordiag/delta-dotnet/tree/initial-research).
 
 | Build | Unit Tests | Static Analisis | Nuget |  
 |-------|------------|-----------------|-------|
