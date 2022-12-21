@@ -1,6 +1,6 @@
 ﻿namespace Delta.Table
 {
-   internal class DeltaTable
+   public class DeltaTable
    {
       internal string BasePath { get; }
       internal DeltaLog? DeltaLog { get; private set; }

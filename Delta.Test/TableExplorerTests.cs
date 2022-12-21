@@ -16,7 +16,7 @@ namespace Delta.Test
          sut.ReadDeltaFolderStructure();
 
          // Assert
-         //sut.TableFolder.Should().NotBeNull();
+         sut.DeltaTable.Should().NotBeNull();
       }
    }
 }

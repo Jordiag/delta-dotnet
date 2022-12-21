@@ -6,18 +6,18 @@ namespace Delta
    public class DeltaTableExplorer
    {
       private readonly DeltaOptions _deltaOptions;
-      private readonly DeltaTable deltaTable;
+      public DeltaTable DeltaTable { get; set; }
 
       public DeltaTableExplorer(string basePath, DeltaOptions deltaOptions)
       {
          _deltaOptions = deltaOptions;
-         deltaTable = new DeltaTable(basePath);
+         DeltaTable = new DeltaTable(basePath);
       }
       // TODO are all files and folder ignored captured?
 
       public void ReadDeltaFolderStructure()
       {
-         WalkDeltaTree(new DirectoryInfo(deltaTable.BasePath), deltaTable, FolderType.Root);
+         WalkDeltaTree(new DirectoryInfo(DeltaTable.BasePath), DeltaTable, FolderType.Root);
       }
 
       private void WalkDeltaTree(DirectoryInfo directoryInfo, DeltaTable deltaTable, FolderType currentFolderType)
@@ -28,12 +28,12 @@ namespace Delta
          {
             case FolderType.DeltaLog:
                Table.DeltaLog deltaLogResult = ProcessDeltaLog(directoryInfo);
-               this.deltaTable.LoadDeltaLog(deltaLogResult);
+               this.DeltaTable.LoadDeltaLog(deltaLogResult);
                break;
             case FolderType.Root:
                (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) root =
                   ProcessRoot(directoryInfo, ref subDirectories, currentFolderType);
-               this.deltaTable.LoadRootDataTable(root.dataFileList, root.crcFileList, root.IgnoredFileList);
+               this.DeltaTable.LoadRootDataTable(root.dataFileList, root.crcFileList, root.IgnoredFileList);
                break;
             case FolderType.Partition:
                ProcessPartitionFolder(directoryInfo, ref subDirectories, deltaTable.Partitions);
@@ -42,7 +42,7 @@ namespace Delta
                if(!_deltaOptions.StrictTableParsing)
                {
                   var ignoredFolder = new IgnoredFolder(directoryInfo.FullName);
-                  this.deltaTable.AddIgnoredFolder(ignoredFolder);
+                  this.DeltaTable.AddIgnoredFolder(ignoredFolder);
                }
                throw new DeltaException($"Unknown type of folder: {directoryInfo.FullName}.");
             default:
@@ -91,7 +91,7 @@ namespace Delta
          string[] nameSplit = directoryInfo.Name.Split('=');
          string key = nameSplit[0];
          string value = nameSplit[1];
-         string parent = GetParentPath(directoryInfo, deltaTable.BasePath);
+         string parent = GetParentPath(directoryInfo, DeltaTable.BasePath);
 
          return new Partition(parent, key, value, dataFiles, dataCrcFiles);
       }
@@ -109,7 +109,7 @@ namespace Delta
       {
          if(rootPartition == null)
          {
-            rootPartition = new Partition(deltaTable.BasePath);
+            rootPartition = new Partition(DeltaTable.BasePath);
             rootPartition.PartitionList.Add(partition);
          }
          else
