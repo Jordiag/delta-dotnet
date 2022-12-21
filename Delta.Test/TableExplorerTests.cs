@@ -9,7 +9,7 @@ namespace Delta.Test
       public void Read_Delta_Folder_Structure()
       {
          // Arrange
-         string basePath = "Data\\delta-0.8.0-partitioned\\";
+         string basePath = Path.Combine("Data","delta-0.8.0-partitioned");
          DeltaTableExplorer sut = new DeltaTableExplorer(basePath, new DeltaOptions());
 
          // Act
@@ -20,3 +20,4 @@ namespace Delta.Test
       }
    }
 }
+

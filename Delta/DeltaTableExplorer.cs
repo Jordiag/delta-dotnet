@@ -11,7 +11,7 @@ namespace Delta
       public DeltaTableExplorer(string basePath, DeltaOptions deltaOptions)
       {
          _deltaOptions = deltaOptions;
-         DeltaTable = new DeltaTable(Path.Combine(basePath));
+         DeltaTable = new DeltaTable(basePath);
       }
       // TODO are all files and folder ignored captured?
 
