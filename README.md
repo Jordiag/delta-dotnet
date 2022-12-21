@@ -68,7 +68,7 @@ dotnet test Delta.sln -c debug
 
 ## License
 
-Delta-dotnet is an open-source software licensed under the [MIT License](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt).
+Delta-dotnet is an open-source software licensed under the [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Jordiag/high-performance-span-of-t-demo/blob/main/LICENSE)
 
 ## Code of Conduct
 
