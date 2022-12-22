@@ -2,9 +2,9 @@
   <img alt="delta lake dotnet" src="https://user-images.githubusercontent.com/8865104/208916475-c45562fa-d28a-40f0-bdb4-745f2ed94b42.png" height="250">
 </picture>
 
-# Delta lake for .NET
+# Delta Lake for .NET
 
-Delta lake for .NET (or delta-dotnet) is a .NET native, high-performance, [delta lake](https://delta.io) ([delta-io](https://github.com/delta-io)) interface library that runs on Linux, Windows, and macOS. Enjoy reliable access from .NET to [ACID](https://en.wikipedia.org/wiki/ACID) Delta Lake big data tables.
+Delta Lake for .NET (or delta-dotnet) is a .NET native, high-performance, [delta Lake](https://delta.io) ([delta-io](https://github.com/delta-io)) interface library that runs on Linux, Windows, and macOS. Enjoy reliable access from .NET to [ACID](https://en.wikipedia.org/wiki/ACID) Delta Lake big data tables.
 
 ## Status
 
