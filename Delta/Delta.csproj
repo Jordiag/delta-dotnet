@@ -4,6 +4,40 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">net7.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(LibraryFrameworks)'!=''">$(LibraryFrameworks)</TargetFrameworks>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1</FileVersion>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionSuffix>pre-alpha</VersionSuffix>
+    <Authors>Jordi Arquimbau</Authors>
+    <Company>Chanlabs</Company>
+    <Description>Delta.Net is a Delta Lake native library for .NET</Description>
+    <Copyright>Copyright © Jordi Arquimbau 2022</Copyright>
+    <Summary>Delta.Net is a Delta Lake native library for .NET</Summary>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Title>Delta.Net</Title>
+    <PackageId>Delta.Net</PackageId>
+    <PackageTags>delta;lake dotnet big;data</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>packageIcon.png</PackageIcon>
+    <PackageIconUrl>https://www.chanlabs.com/nuget.org/nugeticon.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/Jordiag/delta-dotnet</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RootNamespace>Delta.Net</RootNamespace>
+    <AssemblyName>Delta.Net</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageReleaseNotes>see full release notes at https://github.com/Jordiag/delta-dotnet/releases</PackageReleaseNotes>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <LangVersion>latest</LangVersion>
+    <Product />
+    <RepositoryUrl>https://github.com/Jordiag/delta-dotnet</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

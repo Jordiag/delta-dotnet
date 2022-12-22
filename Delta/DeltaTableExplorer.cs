@@ -175,9 +175,9 @@ namespace Delta
       {
          return dirInfo.Name switch
          {
-            Constants.DeltaLogFolder => FolderType.DeltaLog,
-            Constants.DeltaIndexFolder => FolderType.DeltaIndex,
-            Constants.ChangeDataFolder => FolderType.ChangeData,
+            Constants.DeltaLogName => FolderType.DeltaLog,
+            Constants.DeltaIndexName => FolderType.DeltaIndex,
+            Constants.ChangeDataName => FolderType.ChangeData,
             _ => IsPartitionFolder(dirInfo.Name) ? FolderType.Partition : FolderType.Unknown,
          };
       }
@@ -408,7 +408,7 @@ namespace Delta
 
       private static CompressionType ExtractCompression(string compressionText) => compressionText switch
       {
-         Constants.SnappyCompression => CompressionType.Snappy,
+         Constants.SnappyText => CompressionType.Snappy,
          _ => throw new DeltaException($"compression not yet supported in this nuget library: '{compressionText}'."),
       };
    }
