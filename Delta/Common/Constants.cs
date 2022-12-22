@@ -14,6 +14,6 @@ namespace Delta.Common
       internal const string SnappyCompression = "snappy";
       internal const string PartText = "part";
       internal const string LastCheckPointName = "_last_checkpoint";
-      internal static readonly Regex onlyNumbersRegex = new(@"^[0-9]+$");
+      internal static readonly Regex onlyNumbersRegex = new(@"^[0-9]+$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
    }
 }
