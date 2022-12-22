@@ -2,9 +2,9 @@
   <img alt="delta lake dotnet" src="https://user-images.githubusercontent.com/8865104/208916475-c45562fa-d28a-40f0-bdb4-745f2ed94b42.png" height="250">
 </picture>
 
-# Delta lake for .NET
+# Delta Lake for .NET
 
-Delta lake for .NET (or delta-dotnet) is a .NET native, high-performance, [delta lake](https://delta.io) ([delta-io](https://github.com/delta-io)) interface library that runs on Linux, Windows, and macOS. Enjoy reliable access from .NET to [ACID](https://en.wikipedia.org/wiki/ACID) Delta Lake big data tables.
+Delta Lake for .NET (or delta-dotnet) is a .NET native, high-performance, [delta Lake](https://delta.io) ([delta-io](https://github.com/delta-io)) interface library that runs on Linux, Windows, and macOS. Enjoy reliable access from .NET to [ACID](https://en.wikipedia.org/wiki/ACID) Delta Lake big data tables.
 
 ## Status
 
@@ -16,11 +16,11 @@ Currently in [pre-alpha](https://en.wikipedia.org/wiki/Software_release_life_cyc
 
 ## Why
 
-Delta lake ([delta-io](https://github.com/delta-io)) has some public implementations with languages like [Rust](https://github.com/delta-io/delta-rs), [Python](https://github.com/delta-io/delta-rs/tree/main/python)... but no [.NET](https://dotnet.microsoft.com/en-us/) which somewhat limits .NET platform in big data applications. We still don't have anything good and .NET native in this area, for instance, it isn't possible to read a Databricks delta lake table natively from .NET platform (December 2022).
+Delta Lake ([delta-io](https://github.com/delta-io)) has some public implementations with languages like [Rust](https://github.com/delta-io/delta-rs), [Python](https://github.com/delta-io/delta-rs/tree/main/python)... but no [.NET](https://dotnet.microsoft.com/en-us/) which somewhat limits .NET platform in big data applications. We still don't have anything good and .NET native in this area, for instance, it isn't possible to read a Databricks Delta Lake table natively from .NET platform (December 2022).
 
 ## Features
 
-Delta lake for .NET is still in pre-alpha release stage (started in December 2022) where only "read table" feature is going to be implemented but many others are explored. In the future, all the other features will be implemented and updated in these tables. Current development is done using .NET 7 version.
+Delta Lake for .NET is still in pre-alpha release stage (started in December 2022) where only "read table" feature is going to be implemented but many others are explored. In the future, all the other features will be implemented and updated in these tables. Current development is done using .NET 7 version.
 
 | Operation/Feature                                 | main | initial-research |
 | ------------------------------------------------- | ---- | ----------------- |
@@ -38,7 +38,7 @@ Delta lake for .NET is still in pre-alpha release stage (started in December 202
 | ------------------------------------------------- | ---- |
 | Local file system                                 |<img src="https://user-images.githubusercontent.com/8865104/208909673-02f96934-a836-4141-84aa-db2dc7686d5c.svg" alt="in-progress" width="20" height="20" align="center" /> in-progress|
 | AWS S3                                            |<img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A|
-| Azure Blob Storage / Azure  Datalake Storage Gen2 |<img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A|
+| Azure Blob Storage / Azure  DataLake Storage Gen2 |<img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A|
 | Google Cloud Storage                              |<img src="https://user-images.githubusercontent.com/8865104/208910828-d9a283f0-d8f4-4fc2-ac45-a8b5ac65b2e7.svg" alt="not-available" width="20" height="20" align="center" /> N/A|
 
 
