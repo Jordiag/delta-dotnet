@@ -5,26 +5,26 @@ using Delta.DeltaStructure.DeltaLog;
 namespace Delta.DeltaStructure
 {
     /// <summary>
-    /// Delta table folder structure
+    /// Delta table directory structure
     /// </summary>
     public class DeltaTable
     {
         internal string BasePath { get; private set; }
-        internal DeltaLogFolder? DeltaLog { get; private set; }
+        internal DeltaLogDirectory? DeltaLog { get; private set; }
         internal DataFile[]? DataFiles { get; private set; }
         internal DataCrcFile[]? CrcFiles { get; private set; }
         internal Partition[] Partitions { get; private set; }
         internal List<IgnoredFile> IgnoredFileList { get; private set; }
-        internal List<IgnoredFolder> IgnoredFolderList { get; private set; }
+        internal List<IgnoredDirectory> IgnoredDirectoryList { get; private set; }
 
         internal DeltaTable(string rootPath)
         {
             BasePath = rootPath;
             IgnoredFileList = new List<IgnoredFile>();
-            IgnoredFolderList = new List<IgnoredFolder>();
+            IgnoredDirectoryList = new List<IgnoredDirectory>();
         }
 
-        internal void SetDeltaLog(DeltaLogFolder deltaLogFolder) => DeltaLog = deltaLogFolder;
+        internal void SetDeltaLog(DeltaLogDirectory deltaLogDirectory) => DeltaLog = deltaLogDirectory;
 
         internal void SetRootData(DataFile[] dataFileList, DataCrcFile[] crcFileList)
         {

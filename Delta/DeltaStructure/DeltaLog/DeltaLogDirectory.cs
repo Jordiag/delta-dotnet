@@ -2,7 +2,7 @@
 
 namespace Delta.DeltaStructure.DeltaLog
 {
-    internal class DeltaLogFolder
+    internal class DeltaLogDirectory
     {
         internal LogCrcFile[] LogCrcFiles;
         internal LogFile[] LogFiles;
@@ -10,7 +10,7 @@ namespace Delta.DeltaStructure.DeltaLog
         internal LastCheckPointFile? LastCheckPointFiles;
         internal List<IgnoredFile> IgnoredFileList;
 
-        internal DeltaLogFolder(LogCrcFile[] logCrcFiles, LogFile[] logFiles, CheckPointFile[] checkPointFiles, LastCheckPointFile? lastCheckPointFiles, List<IgnoredFile> ignoredFileList)
+        internal DeltaLogDirectory(LogCrcFile[] logCrcFiles, LogFile[] logFiles, CheckPointFile[] checkPointFiles, LastCheckPointFile? lastCheckPointFiles, List<IgnoredFile> ignoredFileList)
         {
             LogCrcFiles = logCrcFiles;
             LogFiles = logFiles;

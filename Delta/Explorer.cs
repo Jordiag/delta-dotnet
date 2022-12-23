@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Reflection;
 using Delta.Common;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.Common;
@@ -8,70 +8,88 @@ using Delta.DeltaStructure.DeltaLog;
 
 namespace Delta
 {
-    public class DeltaTableExplorer
+    /// <summary>
+    /// Explorer Delta Lake directory structure.
+    /// </summary>
+    public class Explorer
     {
         private readonly DeltaOptions _deltaOptions;
-        public DeltaTable DeltaTable { get; set; }
+        private readonly DeltaTable _deltaTable;
 
-        public DeltaTableExplorer(string path, DeltaOptions deltaOptions)
+        /// <summary>
+        /// Constructs an explorer instance.
+        /// </summary>
+        /// <param name="path">Path where data root is.</param>
+        /// <param name="deltaOptions">Options to read data lake directory.</param>
+        public Explorer(string path, DeltaOptions deltaOptions)
         {
-            string basePath = GetFullAssemblyDirectory(path);
+            string basePath = GetCrossSoFullPath(path);
 
             _deltaOptions = deltaOptions;
-            DeltaTable = new DeltaTable(basePath);
+            _deltaTable = new DeltaTable(basePath);
         }
 
-        private static string GetFullAssemblyDirectory(string path)
+        private static string GetCrossSoFullPath(string path)
         {
-            string[] blocks = path.Split(Path.DirectorySeparatorChar);
-            return Path.Combine(blocks);
+            string[] pathArray = path.Split(Path.DirectorySeparatorChar);
+            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray);
+
+            string assamblyLocation = Assembly.GetExecutingAssembly().Location;
+            var uri = new UriBuilder(assamblyLocation);
+            string tempPath = Uri.UnescapeDataString(uri.Path);
+            string? fullAssamblyPath = Path.GetDirectoryName(tempPath);
+            string basePath = $"{fullAssamblyPath}{dataRelativePath}";
+
+            return basePath;
         }
 
-        public void ReadDeltaFolderStructure()
+        public DeltaTable ReadStructure()
         {
             var tempPartition = new Partition(string.Empty);
-            WalkDeltaTree(new DirectoryInfo(DeltaTable.BasePath), DeltaTable, FolderType.Root, tempPartition);
-            DeltaTable.SetPartitions(tempPartition.PartitionList.ToArray());
+            WalkDeltaTree(new DirectoryInfo(_deltaTable.BasePath), _deltaTable, DirectoryType.Root, tempPartition);
+            _deltaTable.SetPartitions(tempPartition.PartitionList.ToArray());
+
+            return _deltaTable;
         }
 
-        private void WalkDeltaTree(DirectoryInfo directoryInfo, DeltaTable deltaTable, FolderType currentFolderType, Partition tempPartition)
+        private void WalkDeltaTree(DirectoryInfo directoryInfo, DeltaTable deltaTable, DirectoryType currentDirectoryType, Partition tempPartition)
         {
             DirectoryInfo[] subDirectories = Array.Empty<DirectoryInfo>();
 
-            switch(currentFolderType)
+            switch(currentDirectoryType)
             {
-                case FolderType.DeltaLog:
-                    DeltaLogFolder deltaLogFolder = ProcessDeltaLog(directoryInfo);
-                    DeltaTable.SetDeltaLog(deltaLogFolder);
+                case DirectoryType.DeltaLog:
+                    DeltaLogDirectory deltaLogDirectory = ProcessDeltaLog(directoryInfo);
+                    _deltaTable.SetDeltaLog(deltaLogDirectory);
                     break;
-                case FolderType.Root:
+                case DirectoryType.Root:
                     (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) root =
-                       ProcessRoot(directoryInfo, ref subDirectories, currentFolderType);
-                    DeltaTable.SetRootData(root.dataFileList, root.crcFileList);
+                       ProcessRoot(directoryInfo, ref subDirectories, currentDirectoryType);
+                    _deltaTable.SetRootData(root.dataFileList, root.crcFileList);
                     break;
-                case FolderType.Partition:
-                    ProcessPartitionFolder(directoryInfo, ref subDirectories, tempPartition);
+                case DirectoryType.Partition:
+                    ProcessPartitionDirectory(directoryInfo, ref subDirectories, tempPartition);
                     break;
-                case FolderType.Unknown:
-                    string message = $"Unknown type of folder: {directoryInfo.FullName}.";
-                    AddToIgnoreList(message, directoryInfo, DeltaTable.IgnoredFolderList);
+                case DirectoryType.Unknown:
+                    string message = $"Unknown type of directory: {directoryInfo.FullName}.";
+                    AddToIgnoreList(message, directoryInfo, _deltaTable.IgnoredDirectoryList);
                     break;
                 default:
-                    message = $"Unknown default type of folder: {directoryInfo.FullName}.";
-                    AddToIgnoreList(message, directoryInfo, DeltaTable.IgnoredFolderList);
+                    message = $"Unknown default type of directory: {directoryInfo.FullName}.";
+                    AddToIgnoreList(message, directoryInfo, _deltaTable.IgnoredDirectoryList);
                     break;
             }
 
             foreach(DirectoryInfo dirInfo in subDirectories)
             {
-                currentFolderType = GetCurrentFolderType(dirInfo);
-                WalkDeltaTree(dirInfo, deltaTable, currentFolderType, tempPartition);
+                currentDirectoryType = GetCurrentDirectoryType(dirInfo);
+                WalkDeltaTree(dirInfo, deltaTable, currentDirectoryType, tempPartition);
             }
         }
 
-        private void ProcessPartitionFolder(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, Partition rootPartition)
+        private void ProcessPartitionDirectory(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, Partition rootPartition)
         {
-            CheckSubFolders(directoryInfo);
+            CheckSubDirectories(directoryInfo);
 
             FileInfo[] files = GetFiles(directoryInfo);
             subDirs = directoryInfo.GetDirectories();
@@ -79,13 +97,13 @@ namespace Delta
 
             if(files.Length == 0 && subDirs.Length == 0)
             {
-                string message = "Partition folder can't contain 0 data files and 0 other folder.";
-                AddToIgnoreList(message, directoryInfo, DeltaTable.IgnoredFolderList);
+                string message = "Partition directory can't contain 0 data files and 0 other directory.";
+                AddToIgnoreList(message, directoryInfo, _deltaTable.IgnoredDirectoryList);
             }
             else if(files.Length > 0 && subDirs.Length > 0)
             {
-                string message = "Partition folder can't contain > 0 data files and > 0 other folder.";
-                AddToIgnoreList(message, directoryInfo, DeltaTable.IgnoredFolderList);
+                string message = "Partition directory can't contain > 0 data files and > 0 other directory.";
+                AddToIgnoreList(message, directoryInfo, _deltaTable.IgnoredDirectoryList);
             }
             else if(files.Length == 0 && subDirs.Length > 0)
             {
@@ -94,14 +112,14 @@ namespace Delta
             }
             else if(files.Length > 0 && subDirs.Length == 0)
             {
-                (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) dataFolderResult = ProcessRootDataFiles(directoryInfo);
-                partition = GetPartitionData(directoryInfo, dataFolderResult.dataFileList, dataFolderResult.crcFileList);
+                (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) dataDirectoryResult = ProcessRootDataFiles(directoryInfo);
+                partition = GetPartitionData(directoryInfo, dataDirectoryResult.dataFileList, dataDirectoryResult.crcFileList);
                 AddToHeirachy(directoryInfo, ref partition, rootPartition);
             }
             else
             {
-                string message = $"Partition folder can't be processed. Files length: {files.Length} SubDirs Length: {subDirs.Length}";
-                AddToIgnoreList(message, directoryInfo, DeltaTable.IgnoredFolderList);
+                string message = $"Partition directory can't be processed. Files length: {files.Length} SubDirectories Length: {subDirs.Length}";
+                AddToIgnoreList(message, directoryInfo, _deltaTable.IgnoredDirectoryList);
             }
 
         }
@@ -111,7 +129,7 @@ namespace Delta
             string[] nameSplit = directoryInfo.Name.Split('=');
             string key = nameSplit[0];
             string value = nameSplit[1];
-            string parent = GetParentPath(directoryInfo, DeltaTable.BasePath);
+            string parent = GetParentPath(directoryInfo, _deltaTable.BasePath);
 
             return new Partition(parent, key, value);
         }
@@ -121,7 +139,7 @@ namespace Delta
             string[] nameSplit = directoryInfo.Name.Split('=');
             string key = nameSplit[0];
             string value = nameSplit[1];
-            string parent = GetParentPath(directoryInfo, DeltaTable.BasePath);
+            string parent = GetParentPath(directoryInfo, _deltaTable.BasePath);
 
             return new PartitionData(parent, key, value, dataFiles, dataCrcFiles);
         }
@@ -138,7 +156,7 @@ namespace Delta
         {
             if(rootPartition == null)
             {
-                rootPartition = new Partition(DeltaTable.BasePath);
+                rootPartition = new Partition(_deltaTable.BasePath);
                 rootPartition.PartitionList.Add(partition);
             }
             else
@@ -157,17 +175,17 @@ namespace Delta
             }
         }
 
-        private Partition? GetParent(Partition folder, string parentName)
+        private Partition? GetParent(Partition directory, string parentName)
         {
-            if(folder == null)
+            if(directory == null)
             {
                 return null;
             }
-            if(parentName == $"{folder.Key}={folder.Value}")
+            if(parentName == $"{directory.Key}={directory.Value}")
             {
-                return folder;
+                return directory;
             }
-            foreach(Partition currentPartition in folder.PartitionList)
+            foreach(Partition currentPartition in directory.PartitionList)
             {
                 Partition? found = GetParent(currentPartition, parentName);
                 if(found != null)
@@ -189,16 +207,16 @@ namespace Delta
 
         }
 
-        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) ProcessRoot(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, FolderType currentFolderType)
+        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) ProcessRoot(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, DirectoryType currentDirectoryType)
         {
             (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) result = ProcessRootDataFiles(directoryInfo);
             subDirs = directoryInfo.GetDirectories();
-            bool noUnderScoreFolderExist = !subDirs.All(subdir => subdir.Name.StartsWith("_"));
+            bool noUnderScoreDirectoryExist = !subDirs.All(subdir => subdir.Name.StartsWith("_"));
 
-            if(currentFolderType == FolderType.Root && result.dataFileList.Length > 1 && noUnderScoreFolderExist)
+            if(currentDirectoryType == DirectoryType.Root && result.dataFileList.Length > 1 && noUnderScoreDirectoryExist)
             {
-                string message = "Error file extension not recognised as root folder file.";
-                AddToIgnoreList(message, directoryInfo, DeltaTable.IgnoredFolderList);
+                string message = "Error file extension not recognised as root directory file.";
+                AddToIgnoreList(message, directoryInfo, _deltaTable.IgnoredDirectoryList);
                 return (Array.Empty<DataFile>(), Array.Empty<DataCrcFile>(), new List<IgnoredFile>());
             }
             else
@@ -207,18 +225,18 @@ namespace Delta
             }
         }
 
-        private static FolderType GetCurrentFolderType(DirectoryInfo dirInfo)
+        private static DirectoryType GetCurrentDirectoryType(DirectoryInfo dirInfo)
         {
             return dirInfo.Name switch
             {
-                Constants.DeltaLogName => FolderType.DeltaLog,
-                Constants.DeltaIndexName => FolderType.DeltaIndex,
-                Constants.ChangeDataName => FolderType.ChangeData,
-                _ => IsPartitionFolder(dirInfo.Name) ? FolderType.Partition : FolderType.Unknown,
+                Constants.DeltaLogName => DirectoryType.DeltaLog,
+                Constants.DeltaIndexName => DirectoryType.DeltaIndex,
+                Constants.ChangeDataName => DirectoryType.ChangeData,
+                _ => IsPartitionDirectory(dirInfo.Name) ? DirectoryType.Partition : DirectoryType.Unknown,
             };
         }
 
-        private static bool IsPartitionFolder(string name)
+        private static bool IsPartitionDirectory(string name)
         {
             return name.Contains('=') && name.Split('=').Length == 2;
         }
@@ -257,7 +275,7 @@ namespace Delta
                             crcFilecounter++;
                             break;
                         default:
-                            string message = "Error file extension not recognised as root folder file.";
+                            string message = "Error file extension not recognised as root directory file.";
                             AddToIgnoreList(message, file, ignoredFileList);
                             break;
                     }
@@ -269,7 +287,7 @@ namespace Delta
 
         private void AddToIgnoreList(string message, FileInfo file, List<IgnoredFile> ignoredFileList)
         {
-            if(_deltaOptions.StrictRootFolderParsing)
+            if(_deltaOptions.StrictRootDirectoryParsing)
             {
                 throw new DeltaException(message);
             }
@@ -280,16 +298,16 @@ namespace Delta
             }
         }
 
-        private void AddToIgnoreList(string message, DirectoryInfo directoryInfo, List<IgnoredFolder> ignoredFolderList)
+        private void AddToIgnoreList(string message, DirectoryInfo directoryInfo, List<IgnoredDirectory> ignoredDirectoryList)
         {
-            if(_deltaOptions.StrictRootFolderParsing)
+            if(_deltaOptions.StrictRootDirectoryParsing)
             {
                 throw new DeltaException(message);
             }
             else
             {
-                IgnoredFolder ignoredFolder = new IgnoredFolder(directoryInfo.FullName);
-                ignoredFolderList.Add(ignoredFolder);
+                IgnoredDirectory ignoredDirectory = new IgnoredDirectory(directoryInfo.FullName);
+                ignoredDirectoryList.Add(ignoredDirectory);
             }
         }
 
@@ -313,9 +331,9 @@ namespace Delta
             return files;
         }
 
-        private DeltaLogFolder ProcessDeltaLog(DirectoryInfo directoryInfo)
+        private DeltaLogDirectory ProcessDeltaLog(DirectoryInfo directoryInfo)
         {
-            CheckSubFolders(directoryInfo);
+            CheckSubDirectories(directoryInfo);
 
             FileInfo[] files = GetFiles(directoryInfo);
             var logCrcFiles = new LogCrcFile[files.Count(file => file.Extension == Constants.CrcExtension)];
@@ -350,17 +368,17 @@ namespace Delta
                     }
                 }
             }
-            var logFolder = new DeltaLogFolder(logCrcFiles, logFiles, checkPointFiles, lastCheckPointFile, ignoredFileList);
+            var logDirectory = new DeltaLogDirectory(logCrcFiles, logFiles, checkPointFiles, lastCheckPointFile, ignoredFileList);
 
-            return logFolder;
+            return logDirectory;
         }
 
-        private void CheckSubFolders(DirectoryInfo directoryInfo)
+        private void CheckSubDirectories(DirectoryInfo directoryInfo)
         {
             DirectoryInfo[] directories = directoryInfo.GetDirectories();
-            if(directories.Length > 0 && _deltaOptions.StrictRootFolderParsing)
+            if(directories.Length > 0 && _deltaOptions.StrictRootDirectoryParsing)
             {
-                throw new DeltaException("Delta_log folder has subfolders.");
+                throw new DeltaException("Delta_log directory has subDirectories.");
             }
         }
 
@@ -394,8 +412,8 @@ namespace Delta
             else
             {
                 string message = !matches.Any() ?
-                    $"Crc file '{file.Name}' has no associated json file in delta_log folder." :
-                    $"Crc file '{file.Name}' has more than 1 associated json file in delta_log folder.";
+                    $"Crc file '{file.Name}' has no associated json file in delta_log directory." :
+                    $"Crc file '{file.Name}' has more than 1 associated json file in delta_log directory.";
                 AddToIgnoreList(message, file, ignoredFileList);
             }
 
@@ -415,7 +433,7 @@ namespace Delta
             }
             else
             {
-                string message = "File extension not recognised as root folder file or name is not only numbers.";
+                string message = "File extension not recognised as root directory file or name is not only numbers.";
                 AddToIgnoreList(message, file, ignoredFileList);
             }
         }
@@ -433,7 +451,7 @@ namespace Delta
 
                 return;
             }
-            string message = "Error file extension not recognised as root folder file.";
+            string message = "Error file extension not recognised as root directory file.";
             AddToIgnoreList(message, file, ignoredFileList);
         }
 
@@ -449,7 +467,7 @@ namespace Delta
                 string parseErrrorMessage = "This file {file} has a non parseable index number to long.";
                 return namePointParts.Length switch
                 {
-                    // TODO still fails, test with multiple test DATA folders
+                    // TODO still fails, test with multiple test DATA Directories
                     1 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), CompressionType.Uncompressed),
                     2 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1])),
                     3 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2])),

@@ -1,10 +1,10 @@
 ﻿namespace Delta.DeltaStructure.Data
 {
-    internal class IgnoredFolder
+    internal class IgnoredDirectory
     {
         internal string FullName { get; }
 
-        internal IgnoredFolder(string fullName)
+        internal IgnoredDirectory(string fullName)
         {
             FullName = fullName;
         }
