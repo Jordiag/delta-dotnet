@@ -13,7 +13,7 @@ namespace Delta.DeltaStructure
         internal DeltaLogFolder? DeltaLog { get; private set; }
         internal DataFile[]? DataFiles { get; private set; }
         internal DataCrcFile[]? CrcFiles { get; private set; }
-        internal Partition Partitions { get; private set; }
+        internal Partition[] Partitions { get; private set; }
         internal List<IgnoredFile> IgnoredFileList { get; private set; }
         internal List<IgnoredFolder> IgnoredFolderList { get; private set; }
 
@@ -22,7 +22,6 @@ namespace Delta.DeltaStructure
             BasePath = rootPath;
             IgnoredFileList = new List<IgnoredFile>();
             IgnoredFolderList = new List<IgnoredFolder>();
-            Partitions = new Partition(rootPath);
         }
 
         internal void SetDeltaLog(DeltaLogFolder deltaLogFolder) => DeltaLog = deltaLogFolder;
@@ -32,5 +31,7 @@ namespace Delta.DeltaStructure
             DataFiles = dataFileList;
             CrcFiles = crcFileList;
         }
+
+        internal void SetPartitions(Partition[] partitions) => Partitions = partitions;
     }
 }

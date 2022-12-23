@@ -1,4 +1,5 @@
-﻿using Delta.Common;
+﻿using System.Collections.Concurrent;
+using Delta.Common;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.Common;
 using Delta.DeltaStructure.Data;
@@ -14,17 +15,26 @@ namespace Delta
 
         public DeltaTableExplorer(string path, DeltaOptions deltaOptions)
         {
-            string basePath = Path.Combine(Directory.GetCurrentDirectory(), path);
+            string basePath = GetFullAssemblyDirectory(path);
+
             _deltaOptions = deltaOptions;
             DeltaTable = new DeltaTable(basePath);
         }
 
-        public void ReadDeltaFolderStructure()
+        private static string GetFullAssemblyDirectory(string path)
         {
-            WalkDeltaTree(new DirectoryInfo(DeltaTable.BasePath), DeltaTable, FolderType.Root);
+            string[] blocks = path.Split(Path.DirectorySeparatorChar);
+            return Path.Combine(blocks);
         }
 
-        private void WalkDeltaTree(DirectoryInfo directoryInfo, DeltaTable deltaTable, FolderType currentFolderType)
+        public void ReadDeltaFolderStructure()
+        {
+            var tempPartition = new Partition(string.Empty);
+            WalkDeltaTree(new DirectoryInfo(DeltaTable.BasePath), DeltaTable, FolderType.Root, tempPartition);
+            DeltaTable.SetPartitions(tempPartition.PartitionList.ToArray());
+        }
+
+        private void WalkDeltaTree(DirectoryInfo directoryInfo, DeltaTable deltaTable, FolderType currentFolderType, Partition tempPartition)
         {
             DirectoryInfo[] subDirectories = Array.Empty<DirectoryInfo>();
 
@@ -40,7 +50,7 @@ namespace Delta
                     DeltaTable.SetRootData(root.dataFileList, root.crcFileList);
                     break;
                 case FolderType.Partition:
-                    ProcessPartitionFolder(directoryInfo, ref subDirectories, deltaTable.Partitions);
+                    ProcessPartitionFolder(directoryInfo, ref subDirectories, tempPartition);
                     break;
                 case FolderType.Unknown:
                     string message = $"Unknown type of folder: {directoryInfo.FullName}.";
@@ -55,7 +65,7 @@ namespace Delta
             foreach(DirectoryInfo dirInfo in subDirectories)
             {
                 currentFolderType = GetCurrentFolderType(dirInfo);
-                WalkDeltaTree(dirInfo, deltaTable, currentFolderType);
+                WalkDeltaTree(dirInfo, deltaTable, currentFolderType, tempPartition);
             }
         }
 
@@ -229,7 +239,7 @@ namespace Delta
                     FileInfo file = files[counter];
                     (bool isIgnored, long index, Guid guid, CompressionType compressionType) fileInfo = GetFileInfo(file, ignoredFileList);
 
-                    if (fileInfo.isIgnored)
+                    if(fileInfo.isIgnored)
                     {
                         return (dataFileList, crcFileList, ignoredFileList);
                     }
