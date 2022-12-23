@@ -25,8 +25,8 @@
     <PackageProjectUrl>https://github.com/Jordiag/delta-dotnet</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <RootNamespace>Delta.Net</RootNamespace>
-    <AssemblyName>Delta.Net</AssemblyName>
+    <RootNamespace>Delta</RootNamespace>
+    <AssemblyName>Delta</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
