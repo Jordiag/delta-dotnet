@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Delta.DeltaLog.Metadata
+namespace Delta.DeltaLog
 {
     public class Format
     {
@@ -8,7 +8,7 @@ namespace Delta.DeltaLog.Metadata
         public string Provider { get; set; }
 
         [JsonPropertyName("options")]
-        public Dictionary<string,string> Options { get; set; }
+        public Dictionary<string, string> Options { get; set; }
     }
 
 }

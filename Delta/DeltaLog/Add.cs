@@ -1,4 +1,4 @@
-﻿namespace Delta.DeltaLog.Add
+﻿namespace Delta.DeltaLog
 {
     public class Add
     {

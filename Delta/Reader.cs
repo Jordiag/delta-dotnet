@@ -1,5 +1,7 @@
 ﻿using Delta.Common;
 using Delta.DeltaStructure;
+using Parquet.Data;
+using Delta.DeltaLog;
 
 namespace Delta
 {
@@ -19,6 +21,23 @@ namespace Delta
         {
             var explorer = new Explorer(path, deltaOptions);
             _deltaTable = explorer.ReadStructure();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public DataColumn[] GetTable()
+        {
+            DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable);
+
+            deltaLog.ReadTransactionLog(_deltaTable);
+            //deltaLog.ReadTransactions();
+            //deltaLog.MergeTransactions();
+            //deltaLog.GetData();
+
+            return Array.Empty<DataColumn>();
         }
     }
 }

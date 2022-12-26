@@ -244,8 +244,8 @@ namespace Delta
         private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) ProcessRootDataFiles(DirectoryInfo directoryInfo)
         {
             FileInfo[] files = GetFiles(directoryInfo);
-            var dataFileList = new DataFile[files.Count(file => file.Extension == Constants.CrcExtension)];
-            var crcFileList = new DataCrcFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
+            var dataFileList = new DataFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
+            var crcFileList = new DataCrcFile[files.Count(file => file.Extension == Constants.CrcExtension)];
             var ignoredFileList = new List<IgnoredFile>();
 
             if(files != null)
@@ -266,13 +266,13 @@ namespace Delta
                     {
                         case Constants.CrcExtension:
                             var crcFile = new DataCrcFile(fileInfo.index, fileInfo.guid.ToString(), file.Length, file.Name);
-                            crcFileList[dataFileCounter] = crcFile;
-                            dataFileCounter++;
+                            crcFileList[crcFilecounter] = crcFile;
+                            crcFilecounter++;
                             break;
                         case Constants.ParquetExtension:
                             var dataFile = new DataFile(fileInfo.index, fileInfo.guid.ToString(), fileInfo.compressionType, file.Length, file.Name);
-                            dataFileList[crcFilecounter] = dataFile;
-                            crcFilecounter++;
+                            dataFileList[dataFileCounter] = dataFile;
+                            dataFileCounter++;
                             break;
                         default:
                             string message = "Error file extension not recognised as root directory file.";

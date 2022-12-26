@@ -41,8 +41,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DeltaLog\Txn\" />
-    <Folder Include="DeltaLog\Remove\" />
+    <Compile Remove="DeltaLog\Remove\**" />
+    <Compile Remove="DeltaLog\Txn\**" />
+    <EmbeddedResource Remove="DeltaLog\Remove\**" />
+    <EmbeddedResource Remove="DeltaLog\Txn\**" />
+    <None Remove="DeltaLog\Remove\**" />
+    <None Remove="DeltaLog\Txn\**" />
   </ItemGroup>
 
   <ItemGroup>

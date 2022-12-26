@@ -1,11 +1,11 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Delta.DeltaLog.Metadata
+namespace Delta.DeltaLog
 {
     public class Metadata
     {
         [JsonPropertyName("id")]
-        [JsonRequiredAttribute]
+        [JsonRequired]
         public Guid Id { get; set; }
 
         [JsonPropertyName("name")]
@@ -15,22 +15,22 @@ namespace Delta.DeltaLog.Metadata
         public string Description { get; set; }
 
         [JsonPropertyName("format")]
-        [JsonRequiredAttribute]
+        [JsonRequired]
         public Format Format { get; set; }
 
         [JsonPropertyName("schemaString")]
-        [JsonRequiredAttribute]
+        [JsonRequired]
         public string SchemaString { get; set; }
 
         [JsonPropertyName("partitionColumns")]
-        [JsonRequiredAttribute]
+        [JsonRequired]
         public string[] PartitionColumns { get; set; }
 
         [JsonPropertyName("createdTime")]
         public long createdTime { get; set; }
 
         [JsonPropertyName("configuration")]
-        [JsonRequiredAttribute]
+        [JsonRequired]
         public Dictionary<string, string> Configuration { get; set; }
     }
 
