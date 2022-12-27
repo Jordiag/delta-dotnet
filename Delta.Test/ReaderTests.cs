@@ -23,7 +23,9 @@ namespace Delta.Test
         public async Task Read_Delta_V0_2_0_Simple_FolderAsync()
         {
             // Arrange
-            string basePath = ".\\Data\\delta-0.2.0-simple\\";
+            string basePath = ".\\Data\\delta-0.2.0\\";
+            basePath = ".\\Data\\delta-0.8.0\\";
+
             var sut = new Reader(basePath, new DeltaOptions());
 
             // Act

@@ -30,7 +30,7 @@ namespace Delta
         /// <returns></returns>
         public DataColumn[] GetTable()
         {
-            DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable);
+            DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable, new DeltaOptions());
 
             deltaLog.ReadTransactionLog(_deltaTable);
             //deltaLog.ReadTransactions();

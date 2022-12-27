@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using Delta.Common;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.Common;
@@ -112,7 +113,7 @@ namespace Delta
             }
             else if(files.Length > 0 && subDirs.Length == 0)
             {
-                (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) dataDirectoryResult = ProcessRootDataFiles(directoryInfo);
+                (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) dataDirectoryResult = ProcessDataFiles(directoryInfo);
                 partition = GetPartitionData(directoryInfo, dataDirectoryResult.dataFileList, dataDirectoryResult.crcFileList);
                 AddToHeirachy(directoryInfo, ref partition, rootPartition);
             }
@@ -209,7 +210,7 @@ namespace Delta
 
         private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) ProcessRoot(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, DirectoryType currentDirectoryType)
         {
-            (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) result = ProcessRootDataFiles(directoryInfo);
+            (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) result = ProcessDataFiles(directoryInfo);
             subDirs = directoryInfo.GetDirectories();
             bool noUnderScoreDirectoryExist = !subDirs.All(subdir => subdir.Name.StartsWith("_"));
 
@@ -241,7 +242,7 @@ namespace Delta
             return name.Contains('=') && name.Split('=').Length == 2;
         }
 
-        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) ProcessRootDataFiles(DirectoryInfo directoryInfo)
+        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) ProcessDataFiles(DirectoryInfo directoryInfo)
         {
             FileInfo[] files = GetFiles(directoryInfo);
             var dataFileList = new DataFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
@@ -457,23 +458,34 @@ namespace Delta
 
         private (bool isIgnored, long index, Guid guid, CompressionType compressionType) GetFileInfo(FileInfo file, List<IgnoredFile> ignoredFileList)
         {
-            string name = file.Name.Substring(0, file.Name.Length - file.Extension.Length);
+            int initialPosition = GetInitialPosition(file.Name);
+            string name = file.Name.Substring(initialPosition, file.Name.Length - file.Extension.Length - initialPosition);
+
             string[] namePointParts = name.Split('.');
             int infoIndex = string.IsNullOrEmpty(namePointParts[0]) ? 1 : 0;
             string[] nameMinusParts = namePointParts[infoIndex].Split('-');
 
-            if(nameMinusParts[0] == Constants.PartText)
+            string parseErrorMessage = $"This file {file.Name} has a non parseable index number to long.";
+            string dotsParseErrorMessage = $"This parquet part file '{name}' has more dot parts than expected: {namePointParts.Length}";
+
+            if(nameMinusParts[0] == Constants.PartText && nameMinusParts.Length == 8)
             {
-                string parseErrrorMessage = "This file {file} has a non parseable index number to long.";
+
                 return namePointParts.Length switch
                 {
-                    // TODO still fails, test with multiple test DATA Directories
-                    1 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), CompressionType.Uncompressed),
-                    2 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1])),
-                    3 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2])),
-                    4 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2])),
-                    5 => (false, ParseFileIndex(nameMinusParts[1], parseErrrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[3])),
-                    _ => throw new DeltaException($"This parquet part file '{name}' has more dots than expected."),
+                    1 => (false, ParseFileIndex(nameMinusParts[1], parseErrorMessage), ExtractGuid(nameMinusParts), CompressionType.Uncompressed),
+                    2 => (false, ParseFileIndex(nameMinusParts[1], parseErrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1])),
+                    3 => (false, ParseFileIndex(nameMinusParts[1], parseErrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[1])),
+                    _ => throw new DeltaException(dotsParseErrorMessage),
+                };
+            }
+            if(nameMinusParts[0] == Constants.PartText && nameMinusParts.Length == 7)
+            {
+                return namePointParts.Length switch
+                {
+                    3 => (false, ParseFileIndex(nameMinusParts[1], parseErrorMessage), ExtractGuid(nameMinusParts), CompressionType.Uncompressed),
+                    4 => (false, ParseFileIndex(nameMinusParts[1], parseErrorMessage), ExtractGuid(nameMinusParts), ExtractCompression(namePointParts[2])),
+                    _ => throw new DeltaException(dotsParseErrorMessage),
                 };
             }
             else
@@ -482,6 +494,14 @@ namespace Delta
                 AddToIgnoreList(message, file, ignoredFileList);
                 return (true, 0, Guid.Empty, CompressionType.Uncompressed);
             }
+        }
+
+        private static int GetInitialPosition(string name)
+        {
+            if(name.StartsWith(".."))
+                return 2;
+
+            return name.StartsWith('.') ? 1 : 0;
         }
 
         private static long ParseFileIndex(string fileIndexText, string message)

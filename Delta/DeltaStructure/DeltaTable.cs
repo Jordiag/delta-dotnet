@@ -33,5 +33,13 @@ namespace Delta.DeltaStructure
         }
 
         internal void SetPartitions(Partition[] partitions) => Partitions = partitions;
+
+        /// <summary>
+        /// Does a basic check to see if Delta table has no log or data files.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsEmpty() 
+            => DeltaLog == null || DeltaLog.LogFiles.Length == 0
+                || ((DataFiles == null || DataFiles.Length == 0) && Partitions.Length == 0);
     }
 }

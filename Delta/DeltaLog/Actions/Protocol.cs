@@ -1,4 +1,4 @@
-﻿namespace Delta.DeltaLog
+﻿namespace Delta.DeltaLog.Actions
 {
     public class Protocol
     {

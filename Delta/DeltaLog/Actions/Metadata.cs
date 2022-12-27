@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Delta.DeltaLog
+namespace Delta.DeltaLog.Actions
 {
     public class Metadata
     {
