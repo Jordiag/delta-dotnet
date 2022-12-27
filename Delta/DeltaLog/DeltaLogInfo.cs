@@ -1,11 +1,10 @@
-﻿using Delta.DeltaStructure;
+﻿using System.Text.Json;
 //using Delta.DeltaLog.Commitinfo;
 //using Delta.DeltaLog.Protocol;
 //using Delta.DeltaLog.Metadata;
 using Delta.Common;
-using System.Data;
+using Delta.DeltaStructure;
 using Delta.DeltaStructure.DeltaLog;
-using System.Text.Json;
 
 namespace Delta.DeltaLog
 {
@@ -37,20 +36,20 @@ namespace Delta.DeltaLog
 
         private void LoadLogFiles()
         {
-            if (_deltaTable.DeltaLog != null)
-            { 
+            if(_deltaTable.DeltaLog != null)
+            {
                 // TODO sort it first? how many can i expect?
                 foreach(LogFile logFile in _deltaTable.DeltaLog.LogFiles)
                 {
-                    string dataPath = 
+                    string dataPath =
                         $"{_deltaTable.BasePath}{Path.DirectorySeparatorChar}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{logFile.Name}";
                     IEnumerable<string> fileLines = File.ReadLines(dataPath);
-                    foreach (string line in fileLines)
+                    foreach(string line in fileLines)
                     {
                         // TODO I left it here trying to deserialise for frst time
                         Commitinfo? commitinfo =
                             JsonSerializer.Deserialize<Commitinfo>(line);
-                        if (commitinfo != null)
+                        if(commitinfo != null)
                         {
                             Commitinfo.Add(commitinfo);
                         }
@@ -58,7 +57,7 @@ namespace Delta.DeltaLog
                 }
             }
         }
-        private bool CheckPointExist() 
+        private bool CheckPointExist()
             => _deltaTable.DeltaLog != null
                 ? _deltaTable.DeltaLog.CheckPointFiles.Length > 0
                 : throw new DeltaException("DeltaLog can't be null after being loaded by Explorer.");
