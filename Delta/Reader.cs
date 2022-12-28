@@ -24,18 +24,14 @@ namespace Delta
         }
 
         /// <summary>
-        /// 
+        /// Read the Data Lake table.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <returns>An array of columns.</returns>
         public DataColumn[] GetTable()
         {
             DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable, new DeltaOptions());
 
             deltaLog.ReadTransactionLog(_deltaTable);
-            //deltaLog.ReadTransactions();
-            //deltaLog.MergeTransactions();
-            //deltaLog.GetData();
 
             return Array.Empty<DataColumn>();
         }

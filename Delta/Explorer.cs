@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using Delta.Common;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.Common;
@@ -44,6 +43,10 @@ namespace Delta
             return basePath;
         }
 
+        /// <summary>
+        /// Red the whole Delta Lake Table folder structure.
+        /// </summary>
+        /// <returns></returns>
         public DeltaTable ReadStructure()
         {
             var tempPartition = new Partition(string.Empty);

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using Delta.Common;
 using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
@@ -32,9 +33,13 @@ namespace Delta.DeltaLog
         {
             if(!CheckPointExist())
             {
-            LoadLogActions();
+                LoadLogActions();
             }
-            throw new NotImplementedException("Later!");
+            else
+            {
+                throw new NotImplementedException("Later!");
+            }
+
         }
 
         private void LoadLogActions()
@@ -52,33 +57,27 @@ namespace Delta.DeltaLog
                         switch(action.actionType)
                         {
                             case ActionType.Protocol:
-                                Protocol? protocol =
-                                    JsonSerializer.Deserialize<Protocol>(action.line, GetJsonSerializerOptions());
-                                SetAction(protocol, Protocol, logFile);
+                                Protocol? protocol = Deserialise<Protocol?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                                Protocol = GetAction(protocol, Protocol, logFile);
                                 break;     
                             case ActionType.Add:
-                                Add? add =
-                                    JsonSerializer.Deserialize<Add>(action.line, GetJsonSerializerOptions());
+                                Add? add = Deserialise<Add?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 AddToList(add, AddList);
                                 break;
                             case ActionType.Remove:
-                                Remove? remove =
-                                    JsonSerializer.Deserialize<Remove>(action.line, GetJsonSerializerOptions());
+                                Remove? remove = Deserialise<Remove?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 AddToList(remove, RemoveList);
                                 break;
                             case ActionType.Metadata:
-                                Metadata? metadata =
-                                    JsonSerializer.Deserialize<Metadata>(action.line, GetJsonSerializerOptions());
-                                SetAction(metadata, Metadata, logFile);
+                                Metadata? metadata  = Deserialise<Metadata?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                                Metadata = GetAction(metadata, Metadata, logFile);
                                 break;
                             case ActionType.Txn:
-                                Txn? txn =
-                                    JsonSerializer.Deserialize<Txn>(action.line, GetJsonSerializerOptions());
+                                Txn? txn = Deserialise<Txn?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 AddToList(txn, TxnList);
                                 break;
                             case ActionType.CommitInfo:
-                                CommitInfo? commitInfo =
-                                    JsonSerializer.Deserialize<CommitInfo>(action.line, GetJsonSerializerOptions());
+                                CommitInfo? commitInfo = Deserialise<CommitInfo?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 AddToList(commitInfo, CommitinfoList);
                                 break;
                         }
@@ -87,11 +86,25 @@ namespace Delta.DeltaLog
             }
         }
 
-        private static void SetAction<T>(T? action, T? property, LogFile logFile)
+        private static T? Deserialise<T>(string line, JsonSerializerOptions options, string fileName)
         {
-            property = property == null
-                    ? action ?? throw new DeltaException($"{nameof(property)} action parsed from Json is null. File: {logFile.Name}")
-                    : throw new DeltaException($"{nameof(property)} action must be loaded once, this was the secont time it appeared, file: {logFile.Name}");
+            try
+            {
+                T? action = JsonSerializer.Deserialize<T>(line, options);
+                return action;
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
+            }
+            catch (NotSupportedException ex)
+            {
+                throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
+            }
+            catch(JsonException ex)
+            {
+                throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
+            }
         }
 
         private static void AddToList<T>(T? action, List<T> list)
@@ -110,6 +123,13 @@ namespace Delta.DeltaLog
             };
         }
 
+        private static T? GetAction<T>(T? action, T? property, LogFile logFile)
+        {
+            return property == null
+                    ? action ?? throw new DeltaException($"{nameof(property)} action parsed from Json is null. File: {logFile.Name}")
+                    : throw new DeltaException($"{nameof(property)} action must be loaded once, this was the secont time it appeared, file: {logFile.Name}");
+        }
+
         private static (ActionType actionType, string line) GetAction(string line, LogFile logFile)
         {
             ActionType actionType;
@@ -119,17 +139,20 @@ namespace Delta.DeltaLog
             switch(action)
             {
                 case "protocol":
-                    line = line.Substring(start + action.Length);
                     actionType = ActionType.Protocol;
                     break;
                 case "add":
-                    return (ActionType.Add, line);
+                    actionType = ActionType.Add;
+                    break;
                 case "remove":
-                    return (ActionType.Add, line);
-                case "metadata":
-                    return (ActionType.Add, line);
+                    actionType = ActionType.Remove;
+                    break;
+                case "metaData":
+                    actionType = ActionType.Metadata;
+                    break;
                 case "txn":
-                    return (ActionType.Add, line);
+                    actionType = ActionType.Txn;
+                    break;
                 case "commitInfo":
                     actionType = ActionType.CommitInfo;
                     break;

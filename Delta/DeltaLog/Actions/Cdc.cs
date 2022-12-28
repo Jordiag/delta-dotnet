@@ -3,13 +3,16 @@
 namespace Delta.DeltaLog.Actions
 {
     /// <summary>
-    /// The add action are used to modify the data in a table by adding  individual logical files respectively.
+    /// The cdc action is used to add a file containing only the data that was changed as part of the transaction. 
+    /// When change data readers encounter a cdc action in a particular Delta table version, 
+    /// they must read the changes made in that version exclusively using the cdc files. 
+    /// If a version has no cdc action, then the data in add and remove actions are read as inserted and deleted rows, respectively.
     /// </summary>
-    public class Add
+    public class Cdc
     {
         /// <summary>
-        /// A relative path to a data file from the root of the table or an absolute path to a file that should be added to the table.
-        /// The path is a URI as specified by RFC 2396 URI Generic Syntax, which needs to be decoded to get the data file path.
+        /// A relative path to a change data file from the root of the table or an absolute path to a change data file that should be added to the table. 
+        /// The path is a URI as specified by RFC 2396 URI Generic Syntax, which needs to be decoded to get the file path.
         /// </summary>
         [JsonPropertyName("path")]
         [JsonRequired]
@@ -34,37 +37,16 @@ namespace Delta.DeltaLog.Actions
         public int Size { get; set; }
 
         /// <summary>
-        /// The time this logical file was created, as milliseconds since the epoch.
-        /// </summary>
-        [JsonPropertyName("modificationTime")]
-        [JsonRequired]
-        public long ModificationTime { get; set; }
-
-        /// <summary>
-        /// When false the logical file must already be present in the table or the records in the added file must be contained in one or more remove actions 
-        /// in the same version.
+        /// Should always be set to false for cdc actions because they do not change the underlying data of the table.
         /// </summary>
         [JsonPropertyName("dataChange")]
         [JsonRequired]
         public bool DataChange { get; set; }
 
         /// <summary>
-        /// Contains statistics (e.g., count, min/max values for columns) about the data in this logical file.
-        /// </summary>
-        [JsonPropertyName("stats")]
-        public string? Stats { get; set; }
-
-        /// <summary>
-        /// Map containing metadata about this logical file.
+        /// Map containing metadata about this file.
         /// </summary>
         [JsonPropertyName("tags")]
         public Dictionary<string, string>? Tags { get; set; }
-
-        /// <summary>
-        /// Either null (or absent in JSON) when no DV is associated with this data file, 
-        /// or a struct (described below) that contains necessary information about the DV that is part of this logical file.
-        /// </summary>
-        [JsonPropertyName("deletionVector")]
-        public string? DeletionVector { get; set; }
     }
 }

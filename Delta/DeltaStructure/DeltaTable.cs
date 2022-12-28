@@ -13,7 +13,7 @@ namespace Delta.DeltaStructure
         internal DeltaLogDirectory? DeltaLog { get; private set; }
         internal DataFile[]? DataFiles { get; private set; }
         internal DataCrcFile[]? CrcFiles { get; private set; }
-        internal Partition[] Partitions { get; private set; }
+        internal Partition[]? Partitions { get; private set; }
         internal List<IgnoredFile> IgnoredFileList { get; private set; }
         internal List<IgnoredDirectory> IgnoredDirectoryList { get; private set; }
 
@@ -40,6 +40,6 @@ namespace Delta.DeltaStructure
         /// <returns></returns>
         public bool IsEmpty() 
             => DeltaLog == null || DeltaLog.LogFiles.Length == 0
-                || ((DataFiles == null || DataFiles.Length == 0) && Partitions.Length == 0);
+                || ((DataFiles == null || DataFiles.Length == 0) && (Partitions == null || Partitions.Length == 0));
     }
 }
