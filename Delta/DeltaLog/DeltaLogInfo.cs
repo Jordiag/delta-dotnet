@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Delta.Common;
 using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
@@ -29,7 +28,7 @@ namespace Delta.DeltaLog
             TxnList = new List<Txn>();
         }
 
-        internal void ReadTransactionLog(DeltaTable deltaTable)
+        internal void ReadTransactionLog()
         {
             if(!CheckPointExist())
             {
@@ -39,7 +38,6 @@ namespace Delta.DeltaLog
             {
                 throw new NotImplementedException("Later!");
             }
-
         }
 
         private void LoadLogActions()
@@ -59,7 +57,7 @@ namespace Delta.DeltaLog
                             case ActionType.Protocol:
                                 Protocol? protocol = Deserialise<Protocol?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 Protocol = GetAction(protocol, Protocol, logFile);
-                                break;     
+                                break;
                             case ActionType.Add:
                                 Add? add = Deserialise<Add?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 AddToList(add, AddList);
@@ -69,7 +67,7 @@ namespace Delta.DeltaLog
                                 AddToList(remove, RemoveList);
                                 break;
                             case ActionType.Metadata:
-                                Metadata? metadata  = Deserialise<Metadata?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                                Metadata? metadata = Deserialise<Metadata?>(action.line, GetJsonSerializerOptions(), logFile.Name);
                                 Metadata = GetAction(metadata, Metadata, logFile);
                                 break;
                             case ActionType.Txn:
@@ -93,11 +91,11 @@ namespace Delta.DeltaLog
                 T? action = JsonSerializer.Deserialize<T>(line, options);
                 return action;
             }
-            catch (ArgumentNullException ex)
+            catch(ArgumentNullException ex)
             {
                 throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
             }
-            catch (NotSupportedException ex)
+            catch(NotSupportedException ex)
             {
                 throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
             }

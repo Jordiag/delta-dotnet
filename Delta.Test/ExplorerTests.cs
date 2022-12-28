@@ -1,5 +1,6 @@
 using Delta.Common;
 using Delta.DeltaStructure;
+using Delta.Storage;
 
 namespace Delta.Test
 {
@@ -23,7 +24,7 @@ namespace Delta.Test
             var sut = new Explorer(basePath, new DeltaOptions(true));
 
             // Act
-            DeltaTable deltaTable = sut.ReadStructure();
+            DeltaTable deltaTable = sut.ReadStructure<LocalFilesystemDirInfo>();
 
             // Assert
             deltaTable.IsEmpty().Should().Be(false);

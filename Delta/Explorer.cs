@@ -1,10 +1,9 @@
-﻿using System.Reflection;
-using Delta.Common;
+﻿using Delta.Common;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.Common;
 using Delta.DeltaStructure.Data;
 using Delta.DeltaStructure.DeltaLog;
-
+using Delta.Storage.Contracts;
 
 namespace Delta
 {
@@ -23,36 +22,39 @@ namespace Delta
         /// <param name="deltaOptions">Options to read data lake directory.</param>
         public Explorer(string path, DeltaOptions deltaOptions)
         {
-            string basePath = GetCrossSoFullPath(path);
+            string basePath = GetCrossSoPath(path);
 
             _deltaOptions = deltaOptions;
             _deltaTable = new DeltaTable(basePath);
-        }
-
-        private static string GetCrossSoFullPath(string path)
-        {
-            string[] pathArray = path.Split(Path.DirectorySeparatorChar);
-            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray).Replace('/', Path.DirectorySeparatorChar);
-
-            return $"{dataRelativePath}";
         }
 
         /// <summary>
         /// Red the whole Delta Lake Table folder structure.
         /// </summary>
         /// <returns></returns>
-        public DeltaTable ReadStructure()
+        public DeltaTable ReadStructure<T>() where T : IDeltaDirectoryInfo, new()
         {
             var tempPartition = new Partition(string.Empty);
-            WalkDeltaTree(new DirectoryInfo(_deltaTable.BasePath), _deltaTable, DirectoryType.Root, tempPartition);
+            var directoryInfo = new T();
+            directoryInfo.Set(_deltaTable.BasePath);
+
+            WalkDeltaTree(directoryInfo, _deltaTable, DirectoryType.Root, tempPartition);
             _deltaTable.SetPartitions(tempPartition.PartitionList.ToArray());
 
             return _deltaTable;
         }
 
-        private void WalkDeltaTree(DirectoryInfo directoryInfo, DeltaTable deltaTable, DirectoryType currentDirectoryType, Partition tempPartition)
+        private static string GetCrossSoPath(string path)
         {
-            DirectoryInfo[] subDirectories = Array.Empty<DirectoryInfo>();
+            string[] pathArray = path.Split('/');
+            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray);
+
+            return $"{dataRelativePath}";
+        }
+
+        private void WalkDeltaTree(IDeltaDirectoryInfo directoryInfo, DeltaTable deltaTable, DirectoryType currentDirectoryType, Partition tempPartition)
+        {
+            IDeltaDirectoryInfo[] subDirectories = Array.Empty<IDeltaDirectoryInfo>();
 
             switch(currentDirectoryType)
             {
@@ -78,18 +80,18 @@ namespace Delta
                     break;
             }
 
-            foreach(DirectoryInfo dirInfo in subDirectories)
+            foreach(IDeltaDirectoryInfo dirInfo in subDirectories)
             {
                 currentDirectoryType = GetCurrentDirectoryType(dirInfo);
                 WalkDeltaTree(dirInfo, deltaTable, currentDirectoryType, tempPartition);
             }
         }
 
-        private void ProcessPartitionDirectory(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, Partition rootPartition)
+        private void ProcessPartitionDirectory(IDeltaDirectoryInfo directoryInfo, ref IDeltaDirectoryInfo[] subDirs, Partition rootPartition)
         {
             CheckSubDirectories(directoryInfo);
 
-            FileInfo[] files = GetFiles(directoryInfo);
+            IDeltaFileInfo[] files = GetFiles(directoryInfo);
             subDirs = directoryInfo.GetDirectories();
             Partition partition;
 
@@ -122,7 +124,7 @@ namespace Delta
 
         }
 
-        private Partition GetPartition(DirectoryInfo directoryInfo)
+        private Partition GetPartition(IDeltaDirectoryInfo directoryInfo)
         {
             string[] nameSplit = directoryInfo.Name.Split('=');
             string key = nameSplit[0];
@@ -132,7 +134,7 @@ namespace Delta
             return new Partition(parent, key, value);
         }
 
-        private Partition GetPartitionData(DirectoryInfo directoryInfo, DataFile[] dataFiles, DataCrcFile[] dataCrcFiles)
+        private Partition GetPartitionData(IDeltaDirectoryInfo directoryInfo, DataFile[] dataFiles, DataCrcFile[] dataCrcFiles)
         {
             string[] nameSplit = directoryInfo.Name.Split('=');
             string key = nameSplit[0];
@@ -150,7 +152,7 @@ namespace Delta
             return parentName;
         }
 
-        private void AddToHeirachy(DirectoryInfo directoryInfo, ref Partition partition, Partition rootPartition)
+        private void AddToHeirachy(IDeltaDirectoryInfo directoryInfo, ref Partition partition, Partition rootPartition)
         {
             if(rootPartition == null)
             {
@@ -195,7 +197,7 @@ namespace Delta
             return null;
         }
 
-        private static string GetParentPath(DirectoryInfo directoryInfo, string basePath)
+        private static string GetParentPath(IDeltaDirectoryInfo directoryInfo, string basePath)
         {
             int startPosition = directoryInfo.FullName.IndexOf(CleanRelativeDot(basePath));
             string path = directoryInfo.FullName[startPosition..];
@@ -215,7 +217,7 @@ namespace Delta
             return path;
         }
 
-        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) ProcessRoot(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, DirectoryType currentDirectoryType)
+        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) ProcessRoot(IDeltaDirectoryInfo directoryInfo, ref IDeltaDirectoryInfo[] subDirs, DirectoryType currentDirectoryType)
         {
             (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) result = ProcessDataFiles(directoryInfo);
             subDirs = directoryInfo.GetDirectories();
@@ -233,7 +235,7 @@ namespace Delta
             }
         }
 
-        private static DirectoryType GetCurrentDirectoryType(DirectoryInfo dirInfo)
+        private static DirectoryType GetCurrentDirectoryType(IDeltaDirectoryInfo dirInfo)
         {
             return dirInfo.Name switch
             {
@@ -249,9 +251,9 @@ namespace Delta
             return name.Contains('=') && name.Split('=').Length == 2;
         }
 
-        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) ProcessDataFiles(DirectoryInfo directoryInfo)
+        private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> ignoredFileList) ProcessDataFiles(IDeltaDirectoryInfo directoryInfo)
         {
-            FileInfo[] files = GetFiles(directoryInfo);
+            IDeltaFileInfo[] files = GetFiles(directoryInfo);
             var dataFileList = new DataFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
             var crcFileList = new DataCrcFile[files.Count(file => file.Extension == Constants.CrcExtension)];
             var ignoredFileList = new List<IgnoredFile>();
@@ -262,7 +264,7 @@ namespace Delta
                 uint crcFilecounter = 0;
                 for(int counter = 0; counter < files.Length; counter++)
                 {
-                    FileInfo file = files[counter];
+                    IDeltaFileInfo file = files[counter];
                     (bool isIgnored, long index, Guid guid, CompressionType compressionType) fileInfo = GetFileInfo(file, ignoredFileList);
 
                     if(fileInfo.isIgnored)
@@ -293,7 +295,7 @@ namespace Delta
             return (dataFileList, crcFileList, ignoredFileList);
         }
 
-        private void AddToIgnoreList(string message, FileInfo file, List<IgnoredFile> ignoredFileList)
+        private void AddToIgnoreList(string message, IDeltaFileInfo file, List<IgnoredFile> ignoredFileList)
         {
             if(_deltaOptions.StrictRootDirectoryParsing)
             {
@@ -306,7 +308,7 @@ namespace Delta
             }
         }
 
-        private void AddToIgnoreList(string message, DirectoryInfo directoryInfo, List<IgnoredDirectory> ignoredDirectoryList)
+        private void AddToIgnoreList(string message, IDeltaDirectoryInfo directoryInfo, List<IgnoredDirectory> ignoredDirectoryList)
         {
             if(_deltaOptions.StrictRootDirectoryParsing)
             {
@@ -319,9 +321,9 @@ namespace Delta
             }
         }
 
-        private static FileInfo[] GetFiles(DirectoryInfo directoryInfo)
+        private static IDeltaFileInfo[] GetFiles(IDeltaDirectoryInfo directoryInfo)
         {
-            FileInfo[] files;
+            IDeltaFileInfo[] files;
             try
             {
                 files = directoryInfo.GetFiles("*.*");
@@ -339,11 +341,11 @@ namespace Delta
             return files;
         }
 
-        private DeltaLogDirectory ProcessDeltaLog(DirectoryInfo directoryInfo)
+        private DeltaLogDirectory ProcessDeltaLog(IDeltaDirectoryInfo directoryInfo)
         {
             CheckSubDirectories(directoryInfo);
 
-            FileInfo[] files = GetFiles(directoryInfo);
+            IDeltaFileInfo[] files = GetFiles(directoryInfo);
             var logCrcFiles = new LogCrcFile[files.Count(file => file.Extension == Constants.CrcExtension)];
             var logFiles = new LogFile[files.Count(file => file.Extension == Constants.JsonExtension)];
             var checkPointFiles = new CheckPointFile[files.Count(file => file.Extension == Constants.ParquetExtension)];
@@ -358,7 +360,7 @@ namespace Delta
 
                 for(int counter = 0; counter < files.Length; counter++)
                 {
-                    FileInfo file = files[counter];
+                    IDeltaFileInfo file = files[counter];
                     switch(file.Extension)
                     {
                         case Constants.JsonExtension:
@@ -381,16 +383,16 @@ namespace Delta
             return logDirectory;
         }
 
-        private void CheckSubDirectories(DirectoryInfo directoryInfo)
+        private void CheckSubDirectories(IDeltaDirectoryInfo directoryInfo)
         {
-            DirectoryInfo[] directories = directoryInfo.GetDirectories();
+            IDeltaDirectoryInfo[] directories = directoryInfo.GetDirectories();
             if(directories.Length > 0 && _deltaOptions.StrictRootDirectoryParsing)
             {
                 throw new DeltaException("Delta_log directory has subDirectories.");
             }
         }
 
-        private void ProcessLogFile(FileInfo file, LogFile[] logFiles, ref uint logFileCounter, List<IgnoredFile> ignoredFileList)
+        private void ProcessLogFile(IDeltaFileInfo file, LogFile[] logFiles, ref uint logFileCounter, List<IgnoredFile> ignoredFileList)
         {
             string fileNameWithoutExtension = file.Name[..^Constants.JsonExtension.Length];
             bool isNumbers = Constants.onlyNumbersRegex.IsMatch(fileNameWithoutExtension);
@@ -408,9 +410,9 @@ namespace Delta
             }
         }
 
-        private void ProcessCrcFile(FileInfo[] files, FileInfo file, LogCrcFile[] logCrcFiles, ref uint logCrcFileCounter, List<IgnoredFile> ignoredFileList)
+        private void ProcessCrcFile(IDeltaFileInfo[] files, IDeltaFileInfo file, LogCrcFile[] logCrcFiles, ref uint logCrcFileCounter, List<IgnoredFile> ignoredFileList)
         {
-            IEnumerable<FileInfo> matches = files.Where(f => f.Name == file.Name);
+            IEnumerable<IDeltaFileInfo> matches = files.Where(f => f.Name == file.Name);
             if(matches.Count() == 1)
             {
                 var logCrcFile = new LogCrcFile(file.Name);
@@ -428,7 +430,7 @@ namespace Delta
 
         }
 
-        private void ProcessParquetFile(FileInfo file, CheckPointFile[] checkPointFiles, ref uint checkPointFileCounter, List<IgnoredFile> ignoredFileList)
+        private void ProcessParquetFile(IDeltaFileInfo file, CheckPointFile[] checkPointFiles, ref uint checkPointFileCounter, List<IgnoredFile> ignoredFileList)
         {
             string fileNameWithoutExtension = file.Name.Substring(0, file.Name.Length - Constants.ParquetExtension.Length - Constants.CheckPointExtension.Length);
 
@@ -446,7 +448,7 @@ namespace Delta
             }
         }
 
-        private void ProcessDefaultFile(FileInfo[] files, FileInfo file, ref LastCheckPointFile? lastCheckPointFile, List<IgnoredFile> ignoredFileList)
+        private void ProcessDefaultFile(IDeltaFileInfo[] files, IDeltaFileInfo file, ref LastCheckPointFile? lastCheckPointFile, List<IgnoredFile> ignoredFileList)
         {
             if(file.Name == Constants.LastCheckPointName)
             {
@@ -463,7 +465,7 @@ namespace Delta
             AddToIgnoreList(message, file, ignoredFileList);
         }
 
-        private (bool isIgnored, long index, Guid guid, CompressionType compressionType) GetFileInfo(FileInfo file, List<IgnoredFile> ignoredFileList)
+        private (bool isIgnored, long index, Guid guid, CompressionType compressionType) GetFileInfo(IDeltaFileInfo file, List<IgnoredFile> ignoredFileList)
         {
             int initialPosition = GetInitialPosition(file.Name);
             string name = file.Name.Substring(initialPosition, file.Name.Length - file.Extension.Length - initialPosition);

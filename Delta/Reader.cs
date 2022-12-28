@@ -2,6 +2,7 @@
 using Delta.DeltaStructure;
 using Parquet.Data;
 using Delta.DeltaLog;
+using Delta.Storage;
 
 namespace Delta
 {
@@ -20,7 +21,7 @@ namespace Delta
         public Reader(string path, DeltaOptions deltaOptions)
         {
             var explorer = new Explorer(path, deltaOptions);
-            _deltaTable = explorer.ReadStructure();
+            _deltaTable = explorer.ReadStructure<LocalFilesystemDirInfo>();
         }
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace Delta
         {
             DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable, new DeltaOptions());
 
-            deltaLog.ReadTransactionLog(_deltaTable);
+            deltaLog.ReadTransactionLog();
 
             return Array.Empty<DataColumn>();
         }
