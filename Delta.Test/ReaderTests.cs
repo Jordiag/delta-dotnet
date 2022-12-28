@@ -10,7 +10,7 @@ namespace Delta.Test
         public async Task Read_Delta_V0_2_0_Checkpoint_FolderAsync()
         {
             // Arrange
-            string basePath = ".\\Data\\delta-0.2.0\\_delta_log\\00000000000000000003.checkpoint.parquet";
+            string basePath = "./Data/delta-0.2.0/_delta_log/00000000000000000003.checkpoint.parquet";
 
             // Act
             (List<string[]> idsList, Schema schema, DataColumn[] data) result = await ParquetUtils.ReadAsync(basePath);
@@ -23,7 +23,7 @@ namespace Delta.Test
         public void Read_Delta_V0_2_0_Simple_Folder()
         {
             // Arrange
-            string basePath = ".\\Data\\delta-0.8.0\\";
+            string basePath = "./Data/delta-0.8.0/";
 
             var sut = new Reader(basePath, new DeltaOptions());
 

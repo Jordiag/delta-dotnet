@@ -32,15 +32,14 @@ namespace Delta
         private static string GetCrossSoFullPath(string path)
         {
             string[] pathArray = path.Split(Path.DirectorySeparatorChar);
-            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray);
+            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray).Replace('/', Path.DirectorySeparatorChar);
 
             string assamblyLocation = Assembly.GetExecutingAssembly().Location;
             var uri = new UriBuilder(assamblyLocation);
             string tempPath = Uri.UnescapeDataString(uri.Path);
             string? fullAssamblyPath = Path.GetDirectoryName(tempPath);
-            string basePath = $"{fullAssamblyPath}{dataRelativePath}";
 
-            return basePath;
+            return $"{fullAssamblyPath}{dataRelativePath}";
         }
 
         /// <summary>

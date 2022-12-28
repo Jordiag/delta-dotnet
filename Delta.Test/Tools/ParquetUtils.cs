@@ -12,7 +12,7 @@ namespace Delta.Test.Tools
         public static async Task<(List<string[]> idsList, Schema schema, DataColumn[] data)> ReadAsync(string path)
         {
             // open file stream
-            using(Stream fileStream = System.IO.File.OpenRead(path))
+            using(Stream fileStream = File.OpenRead(path))
             {
                 var idsList = new List<string[]>();
                 // open parquet file reader
