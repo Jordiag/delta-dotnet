@@ -34,12 +34,7 @@ namespace Delta
             string[] pathArray = path.Split(Path.DirectorySeparatorChar);
             string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray).Replace('/', Path.DirectorySeparatorChar);
 
-            string assamblyLocation = Assembly.GetExecutingAssembly().Location;
-            var uri = new UriBuilder(assamblyLocation);
-            string tempPath = Uri.UnescapeDataString(uri.Path);
-            string? fullAssamblyPath = Path.GetDirectoryName(tempPath);
-
-            return $"{fullAssamblyPath}{dataRelativePath}";
+            return $"{dataRelativePath}";
         }
 
         /// <summary>
@@ -202,12 +197,22 @@ namespace Delta
 
         private static string GetParentPath(DirectoryInfo directoryInfo, string basePath)
         {
-            int startPosition = directoryInfo.FullName.IndexOf(basePath);
+            int startPosition = directoryInfo.FullName.IndexOf(CleanRelativeDot(basePath));
             string path = directoryInfo.FullName[startPosition..];
             path = path[..^directoryInfo.Name.Length];
 
             return path;
 
+        }
+
+        private static string CleanRelativeDot(string path)
+        {
+            if(path.StartsWith('.'))
+            {
+                path = path[1..];
+            }
+
+            return path;
         }
 
         private (DataFile[] dataFileList, DataCrcFile[] crcFileList, List<IgnoredFile> IgnoredFileList) ProcessRoot(DirectoryInfo directoryInfo, ref DirectoryInfo[] subDirs, DirectoryType currentDirectoryType)
