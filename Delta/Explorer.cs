@@ -3,6 +3,7 @@ using Delta.DeltaStructure;
 using Delta.DeltaStructure.Common;
 using Delta.DeltaStructure.Data;
 using Delta.DeltaStructure.DeltaLog;
+using Delta.Storage;
 using Delta.Storage.Contracts;
 
 namespace Delta
@@ -18,22 +19,31 @@ namespace Delta
         /// <summary>
         /// Constructs an explorer instance.
         /// </summary>
-        /// <param name="path">Path where data root is.</param>
+        /// <param name="basePath">Path where data root is.</param>
         /// <param name="deltaOptions">Options to read data lake directory.</param>
-        public Explorer(string path, DeltaOptions deltaOptions)
+        public Explorer(string basePath, DeltaOptions deltaOptions)
         {
-            string basePath = GetCrossSoPath(path);
-
             _deltaOptions = deltaOptions;
             _deltaTable = new DeltaTable(basePath);
         }
 
         /// <summary>
-        /// Red the whole Delta Lake Table folder structure.
+        /// Red the whole Delta Lake Table directory structure.
         /// </summary>
         /// <returns></returns>
         public DeltaTable ReadStructure<T>() where T : IDeltaDirectoryInfo, new()
         {
+            switch(typeof(T))
+            {
+                case Type intType when intType == typeof(FileSystemDir):
+                    string crossOsBasePath = FileSystemDir.GetCrossSoPath(_deltaTable.BasePath);
+                    _deltaTable.SetBasePath(crossOsBasePath);
+                    break;
+                case Type intType when intType == typeof(AzureDataLakeDir):
+                    break;
+                    
+            }
+
             var tempPartition = new Partition(string.Empty);
             var directoryInfo = new T();
             directoryInfo.Set(_deltaTable.BasePath);
@@ -42,14 +52,6 @@ namespace Delta
             _deltaTable.SetPartitions(tempPartition.PartitionList.ToArray());
 
             return _deltaTable;
-        }
-
-        private static string GetCrossSoPath(string path)
-        {
-            string[] pathArray = path.Split('/');
-            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray);
-
-            return $"{dataRelativePath}";
         }
 
         private void WalkDeltaTree(IDeltaDirectoryInfo directoryInfo, DeltaTable deltaTable, DirectoryType currentDirectoryType, Partition tempPartition)

@@ -21,7 +21,7 @@ namespace Delta
         public Reader(string path, DeltaOptions deltaOptions)
         {
             var explorer = new Explorer(path, deltaOptions);
-            _deltaTable = explorer.ReadStructure<LocalFilesystemDirInfo>();
+            _deltaTable = explorer.ReadStructure<FileSystemDir>();
         }
 
         /// <summary>

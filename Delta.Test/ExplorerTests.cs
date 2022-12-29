@@ -24,7 +24,7 @@ namespace Delta.Test
             var sut = new Explorer(basePath, new DeltaOptions(true));
 
             // Act
-            DeltaTable deltaTable = sut.ReadStructure<LocalFilesystemDirInfo>();
+            DeltaTable deltaTable = sut.ReadStructure<FileSystemDir>();
 
             // Assert
             deltaTable.IsEmpty().Should().Be(false);

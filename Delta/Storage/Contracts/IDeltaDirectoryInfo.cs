@@ -1,7 +1,6 @@
 ﻿namespace Delta.Storage.Contracts
 {
     /// <summary>
-    /// 
     /// Delta Directory information.
     /// </summary>
     public interface IDeltaDirectoryInfo
@@ -21,8 +20,18 @@
         /// </summary>
         string DirPath { get; }
 
+        /// <summary>
+        /// Sets filesystemDir path property.
+        /// </summary>
+        /// <param name="path">Path</param>
         void Set(string path);
 
+        /// <summary>
+        /// Sets filesystemDir  properties.
+        /// </summary>
+        /// <param name="name">Name.</param>
+        /// <param name="fullName">Full name.</param>
+        /// <param name="path">Path</param>
         void Set(string name, string fullName, string path);
 
         /// <summary>
@@ -30,7 +39,6 @@
         /// </summary>
         /// <returns>Returns an array of the inner directories.</returns>
         IDeltaDirectoryInfo[] GetDirectories();
-
 
         /// <summary>
         /// Get inner files.

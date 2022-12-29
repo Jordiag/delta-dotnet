@@ -18,27 +18,27 @@
     public enum DirectoryType
     {
         /// <summary>
-        /// The root folder of the Delta Lake Table.
+        /// The root directory of the Delta Lake Table.
         /// </summary>
         Root,
         /// <summary>
-        /// The delta log folder of the Delta Lake Table.
+        /// The delta log directory of the Delta Lake Table.
         /// </summary>
         DeltaLog,
         /// <summary>
-        /// The delta index folder of the Delta Lake Table located inside root folder.
+        /// The delta index directory of the Delta Lake Table located inside root directory.
         /// </summary>
         DeltaIndex,
         /// <summary>
-        /// The change data folder of the Delta Lake Table located inside root folder.
+        /// The change data directory of the Delta Lake Table located inside root directory.
         /// </summary>
         ChangeData,
         /// <summary>
-        /// The partition folder of the Delta Lake Table located inside root folder.
+        /// The partition directory of the Delta Lake Table located inside root directory.
         /// </summary>
         Partition,
         /// <summary>
-        /// Unknown Delta Lake Table folder type.
+        /// Unknown Delta Lake Table directory type.
         /// </summary>
         Unknown
     }

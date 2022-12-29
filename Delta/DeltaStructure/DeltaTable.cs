@@ -24,6 +24,8 @@ namespace Delta.DeltaStructure
             IgnoredDirectoryList = new List<IgnoredDirectory>();
         }
 
+        internal void SetBasePath(string basePath) => BasePath = basePath;
+
         internal void SetDeltaLog(DeltaLogDirectory deltaLogDirectory) => DeltaLog = deltaLogDirectory;
 
         internal void SetRootData(DataFile[] dataFileList, DataCrcFile[] crcFileList)

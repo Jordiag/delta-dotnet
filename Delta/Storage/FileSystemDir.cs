@@ -1,40 +1,56 @@
-﻿using System.IO;
-using Delta.Storage.Contracts;
+﻿using Delta.Storage.Contracts;
 
 namespace Delta.Storage
 {
     /// <summary>
     /// <inheritdoc />
     /// </summary>
-    public class LocalFilesystemDirInfo : IDeltaDirectoryInfo
+    public class FileSystemDir : IDeltaDirectoryInfo
     {
         /// <summary>
         /// <inheritdoc />
         /// </summary>
-        public string? Name { get; private set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// <inheritdoc />
         /// </summary>
-        public string? FullName { get; private set; }
+        public string FullName { get; private set; }
 
         /// <summary>
         /// <inheritdoc />
         /// </summary>
-        public string? DirPath { get; private set; }
+        public string DirPath { get; private set; }
+
+        /// <summary>
+        /// Creates instance.
+        /// </summary>
+        public FileSystemDir()
+        {
+            Name = string.Empty;
+            FullName = string.Empty;
+            DirPath = string.Empty;
+        }
 
         /// <summary>
         /// <inheritdoc />
         /// </summary>
         /// <param name="path"><inheritdoc /></param>
-        public void Set(string path) => DirPath = path;
+        public void Set(string path) 
+            => DirPath = GetCrossSoPath(path);
 
+        /// <summary>
+        /// <inheritdoc />
+        /// </summary>
+        /// <param name="name"><inheritdoc /></param>
+        /// <param name="fullName"><inheritdoc /></param>
+        /// <param name="path"><inheritdoc /></param>
         public void Set(string name, string fullName, string path)
         {
             Name = name;
             FullName = fullName;
-            DirPath = path;
-        } 
+            DirPath = DirPath == null ? GetCrossSoPath(path) : path;
+        }
 
         /// <summary>
         /// <inheritdoc />
@@ -47,12 +63,10 @@ namespace Delta.Storage
             var deltaDirectoryInfos = new IDeltaDirectoryInfo[directoryInfos.Length];
             for(int i = 0; i < directoryInfos.Length; i++)
             {
-                var deltaDirectoryInfo = new LocalFilesystemDirInfo();
+                var deltaDirectoryInfo = new FileSystemDir();
                 deltaDirectoryInfo.Set(directoryInfos[i].Name, directoryInfos[i].FullName, $"{DirPath}{Path.DirectorySeparatorChar}{directoryInfos[i].Name}");
                 deltaDirectoryInfos[i] = deltaDirectoryInfo;
             }
-
-            // TODO check if partition files are not loaded,move out from explorer cross so method
 
             return deltaDirectoryInfos;
         }
@@ -74,6 +88,19 @@ namespace Delta.Storage
             }
 
             return deltaFileInfos;
+        }
+
+        /// <summary>
+        /// Makes path cross operation system
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string GetCrossSoPath(string path)
+        {
+            string[] pathArray = path.Split('/');
+            string dataRelativePath = string.Join(Path.DirectorySeparatorChar, pathArray);
+
+            return $"{dataRelativePath}";
         }
     }
 }
