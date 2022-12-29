@@ -58,7 +58,7 @@ namespace Delta.Storage
             DirPath = path;
         }
 
-        private DataLakeFileSystemClient _dataLakeFileSystemClient;
+        private DataLakeFileSystemClient? _dataLakeFileSystemClient;
 
         /// <summary>
         /// <inheritdoc />

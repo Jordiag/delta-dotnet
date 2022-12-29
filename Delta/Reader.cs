@@ -28,11 +28,11 @@ namespace Delta
         /// Read the Data Lake table.
         /// </summary>
         /// <returns>An array of columns.</returns>
-        public DataColumn[] GetTable()
+        public async Task<DataColumn[]> GetTableAsync()
         {
             DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable, new DeltaOptions());
 
-            deltaLog.ReadTransactionLog();
+            await deltaLog.ReadTransactionLogAsync();
 
             return Array.Empty<DataColumn>();
         }
