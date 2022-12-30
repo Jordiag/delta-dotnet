@@ -14,7 +14,8 @@ namespace Delta.Test
             string basePath = "./Data/delta-0.2.0/_delta_log/00000000000000000003.checkpoint.parquet";
 
             // Act
-            Stream stream = await FileSystem.GetFileStreamAsync(basePath);
+            Stream? stream = null;
+            FileSystem.GetFileStream(basePath, ref stream);
             CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream);
 
             // Assert

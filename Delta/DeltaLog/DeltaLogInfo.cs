@@ -42,48 +42,83 @@ namespace Delta.DeltaLog
             }
         }
 
+        /// <summary>
+        /// Loads all log actions considering checkpoint if exist.
+        /// ASSUMPTION: _last_checkpoint file is considered optional.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="DeltaException"></exception>
         private async Task LoadLogActionsWithCheckpointAsync()
         {
-            string lastCheckpointPath =
-                $"{_deltaTable.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{_deltaTable?.DeltaLog?.LastCheckPointFile?.Name}";
-            string line = File.ReadLines(lastCheckpointPath).ToArray()[0];
+            if(_deltaTable == null || _deltaTable.DeltaLog == null)
+            {
+                throw new DeltaException("Explorer deltaTable is null or deltaTable.DeltaLog is null.");
+            }
+            string? checkpointFileName = null;
 
-            LastCheckPoint? lastCheckPoint = Deserialise<LastCheckPoint>(line, GetJsonSerializerOptions(), lastCheckpointPath);
-            string? checkpointFileName;
-            if(lastCheckPoint == null)
+            if(_deltaTable.DeltaLog.LastCheckPointFile != null)
             {
-                throw new DeltaException($"Failed to deserialise {Constants.LastCheckPointName} from this file {lastCheckpointPath}");
+
+                string lastCheckpointPath =
+                    $"{_deltaTable.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{_deltaTable.DeltaLog.LastCheckPointFile.Name}";
+
+                string line = File.ReadLines(lastCheckpointPath).ToArray()[0];
+
+                LastCheckPoint? lastCheckPoint = Deserialise<LastCheckPoint>(line, GetJsonSerializerOptions(), lastCheckpointPath);
+
+                if(lastCheckPoint == null)
+                {
+                    throw new DeltaException($"Failed to deserialise {Constants.LastCheckPointName} from this file {lastCheckpointPath}");
+                }
+
+                try
+                {
+                    checkpointFileName = _deltaTable.DeltaLog.CheckPointFiles?.SingleOrDefault(file => file.Index == lastCheckPoint.Version)?.Name;
+                }
+                catch(ArgumentNullException ex)
+                {
+                    throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
+                }
+                catch(InvalidOperationException ex)
+                {
+                    throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
+                }
+            }
+            else
+            {
+                long? max = _deltaTable.DeltaLog.CheckPointFiles.Max(checkPoint => checkPoint.Index);
+                if (max != null)
+                {
+                    checkpointFileName = _deltaTable.DeltaLog.CheckPointFiles?.FirstOrDefault(checkPoint => checkPoint.Index == max)?.Name;
+                }
             }
 
-            try
-            {
-                checkpointFileName = _deltaTable?.DeltaLog?.CheckPointFiles?.SingleOrDefault(file => file.Index == lastCheckPoint.Version)?.Name;
-            }
-            catch(ArgumentNullException ex)
-            {
-                throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
-            }
-            catch(InvalidOperationException ex)
-            {
-                throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
-            }
 
             if(checkpointFileName == null)
             {
-                throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}");
+                throw new DeltaException($"Failed to find the last CheckPoint file in: {_deltaTable.BasePath}{Path.DirectorySeparatorChar}{Constants.DeltaLogName}");
             }
             else
             {
                 string checkpointPath =
                     $"{_deltaTable?.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{checkpointFileName}";
 
-                Stream stream = await FileSystem.GetFileStreamAsync(checkpointPath);
-                CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream);
+                Stream? stream = null;
+                try
+                {
+                    FileSystem.GetFileStream(checkpointPath, ref stream);
+                    CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream);
+                }
+                catch(DeltaException ex)
+                {
+                    throw new DeltaException($"Failed to load checkpoint data: {checkpointPath}", ex);
+                }
+                finally
+                {
+                    stream?.Dispose();
+                }
 
-                //if(result.data?.Count != lastCheckPoint.Size)
-                //{
-                //    throw new DeltaException($"Checkpoint expected rows: '{lastCheckPoint.Size}' where not found: '{result.data?.Count}', size property in {Constants.LastCheckPointName} looks corrupted.");
-                //}
+
                 // I left it here
             }
         }

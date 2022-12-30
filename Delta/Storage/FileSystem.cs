@@ -17,48 +17,42 @@ namespace Delta.Storage
         /// Get a filestream from a filesystem file path.
         /// </summary>
         /// <param name="path">Filesystem file path</param>
+        /// <param name="stream">Container stream</param>
         /// <returns></returns>
         /// <exception cref="DeltaException"></exception>
-        public static async Task<Stream> GetFileStreamAsync(string path)
+        public static void GetFileStream(string path, ref Stream? stream)
         {
-            Stream? fileStream = null;
             try
             {
-                fileStream = System.IO.File.OpenRead(path);
-
-                return fileStream;
+                stream = System.IO.File.OpenRead(path);
             }
-            catch(System.ArgumentException ex)
+            catch(ArgumentException ex)
             {
                 throw new DeltaException("Get file stream failed.", ex);
             }
-            catch(System.UnauthorizedAccessException ex)
+            catch(UnauthorizedAccessException ex)
             {
                 throw new DeltaException("Get file stream failed.", ex);
             }
-            catch(System.IO.PathTooLongException ex)
+            catch(PathTooLongException ex)
             {
                 throw new DeltaException("Get file stream failed.", ex);
             }
-            catch(System.IO.DirectoryNotFoundException ex)
+            catch(DirectoryNotFoundException ex)
             {
                 throw new DeltaException("Get file stream failed.", ex);
             }
-            catch(System.IO.FileNotFoundException ex)
+            catch(FileNotFoundException ex)
             {
                 throw new DeltaException("Get file stream failed.", ex);
             }
-            catch(System.ObjectDisposedException ex)
+            catch(ObjectDisposedException ex)
             {
                 throw new DeltaException("Get file stream failed.", ex);
             }
-
-            finally
+            catch(NotSupportedException ex)
             {
-                if(fileStream != null)
-                {
-                    await fileStream.DisposeAsync();
-                }
+                throw new DeltaException("Get file stream failed.", ex);
             }
         }
     }

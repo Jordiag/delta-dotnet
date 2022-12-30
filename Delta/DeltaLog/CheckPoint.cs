@@ -5,12 +5,13 @@ namespace Delta.DeltaLog
     // TODO needs to set sizes and mandatories removing nullables
     public class CheckPoint
     {
-        internal Add[]? Adds { get; set; }
-        internal Remove[]? Removes { get; set; }
-        internal Txn[]? Txns { get; set; }
-        internal CommitInfo[]? CommitInfos { get; set; }
-        internal Version[]? Versions { get; set; }
-        internal Protocol[]? Protocols { get; set; }
-        internal Metadata[]? Metadatas { get; set; }
+        public Cdc[] Cdcs { get; internal set; }
+        internal IEnumerable<Add> Adds { get; set; }
+        internal IEnumerable<Remove>? Removes { get; set; }
+        internal IEnumerable<Txn>? Txns { get; set; }
+        internal IEnumerable<CommitInfo>? CommitInfos { get; set; }
+        internal IEnumerable<Version>? Versions { get; set; }
+        internal IEnumerable<Protocol>? Protocols { get; set; }
+        internal IEnumerable<Metadata>? Metadatas { get; set; }
     }
 }

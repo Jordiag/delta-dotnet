@@ -9,7 +9,7 @@ namespace Delta.DeltaLog.Actions
     /// There can be at most one metadata action in a given version of the table.
     /// Every metadata action must include required fields at a minimum.
     /// </summary>
-    public class Metadata
+    public class Metadata : IAction
     {
         /// <summary>
         /// Unique identifier for this table.

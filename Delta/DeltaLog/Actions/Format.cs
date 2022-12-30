@@ -6,7 +6,7 @@ namespace Delta.DeltaLog.Actions
     /// In the reference implementation, the provider field is used to instantiate a Spark SQL FileFormat. 
     /// As of Spark 2.4.3 there is built-in FileFormat support for parquet, csv, orc, json, and text.
     /// </summary>
-    public class Format
+    public class Format : IAction
     {
         /// <summary>
         /// Name of the encoding for files in this table

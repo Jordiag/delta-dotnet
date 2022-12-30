@@ -10,7 +10,7 @@ namespace Delta.DeltaLog.Actions
     /// and version is an indication of how much progress has been made by that application.The atomic recording of this information along with modifications to 
     /// the table enables these external system to make their writes into a Delta table idempotent.
     /// </summary>
-    public class Txn
+    public class Txn : IAction
     {
         /// <summary>
         /// A unique identifier for the application performing the transaction

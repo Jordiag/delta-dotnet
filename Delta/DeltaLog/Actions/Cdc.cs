@@ -8,7 +8,7 @@ namespace Delta.DeltaLog.Actions
     /// they must read the changes made in that version exclusively using the cdc files. 
     /// If a version has no cdc action, then the data in add and remove actions are read as inserted and deleted rows, respectively.
     /// </summary>
-    public class Cdc
+    public class Cdc : IAction
     {
         /// <summary>
         /// A relative path to a change data file from the root of the table or an absolute path to a change data file that should be added to the table. 

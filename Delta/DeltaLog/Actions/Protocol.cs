@@ -11,7 +11,7 @@ namespace Delta.DeltaLog.Actions
     /// unrecognized fields or actions are never required in order to correctly interpret the transaction log.
     /// </summary>
     /// 
-    public class Protocol
+    public class Protocol : IAction
     {
         /// <summary>
         /// The minimum version of the Delta read protocol that a client must implement in order to correctly read this table.

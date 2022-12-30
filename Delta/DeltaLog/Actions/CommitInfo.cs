@@ -9,7 +9,7 @@ namespace Delta.DeltaLog.Actions
     /// DeltaCommand is requested to commitLarge(for ConvertToDeltaCommand command and FileAlreadyExistsException was thrown)
     /// CommitInfo is used as a part of OptimisticTransactionImpl and CommitStats.
     /// </summary>
-    public class CommitInfo
+    public class CommitInfo : IAction
     {
         /// <summary>
         /// CommitInfo Timestamp in Unix time.
