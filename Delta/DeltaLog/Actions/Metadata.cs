@@ -61,7 +61,7 @@ namespace Delta.DeltaLog.Actions
         /// The time when this metadata action is created, in milliseconds since the Unix epoch.
         /// </summary>
         [JsonPropertyName("createdTime")]
-        public long? createdTime { get; set; }
+        public long? CreatedTime { get; set; }
 
         /// <summary>
         /// A map containing configuration options for the metadata action.
