@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Delta.Common;
 using Delta.DeltaLog;
 using Delta.Storage;
@@ -16,7 +17,11 @@ namespace Delta.Test
             // Act
             Stream? stream = null;
             FileSystem.GetFileStream(basePath, ref stream);
-            CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream);
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = false,
+            };
+            CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, basePath);
 
             // Assert
             result.Adds.Should().BeNull();

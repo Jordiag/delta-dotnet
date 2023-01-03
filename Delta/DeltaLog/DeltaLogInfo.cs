@@ -107,7 +107,13 @@ namespace Delta.DeltaLog
                 try
                 {
                     FileSystem.GetFileStream(checkpointPath, ref stream);
-                    CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream);
+                    var jsonOptions = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = _deltaOptions.DeserialiseCaseInsensitive,
+                    };
+                    jsonOptions.Converters.Add(new DictionaryJsonConverter());
+
+                    CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
                 }
                 catch(DeltaException ex)
                 {

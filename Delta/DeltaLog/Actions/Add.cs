@@ -5,7 +5,7 @@ namespace Delta.DeltaLog.Actions
     /// <summary>
     /// The add action are used to modify the data in a table by adding  individual logical files respectively.
     /// </summary>
-    public class Add: IAction
+    public class Add : IAction
     {
         /// <summary>
         /// A relative path to a data file from the root of the table or an absolute path to a file that should be added to the table.
@@ -13,18 +13,18 @@ namespace Delta.DeltaLog.Actions
         /// </summary>
         [JsonPropertyName("path")]
         [JsonRequired]
-        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string Path { get; set; }
-        #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         /// <summary>
         /// A map from partition column to value for this logical file.
         /// </summary>
         [JsonPropertyName("partitionValues")]
         [JsonRequired]
-        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public Dictionary<string, string> PartitionValues { get; set; }
-        #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         /// <summary>
         /// The size of this data file in bytes.
