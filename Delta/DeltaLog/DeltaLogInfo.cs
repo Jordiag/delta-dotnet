@@ -113,7 +113,7 @@ namespace Delta.DeltaLog
                     };
                     jsonOptions.Converters.Add(new DictionaryJsonConverter());
 
-                    CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
+                    SortedList<int, IAction> result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
                 }
                 catch(DeltaException ex)
                 {

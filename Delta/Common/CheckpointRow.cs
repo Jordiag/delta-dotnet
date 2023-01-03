@@ -14,7 +14,7 @@ namespace Delta.Common
         [JsonPropertyName("remove")]
         public object Remove { get; set; }
 
-        [JsonPropertyName("metadata")]
+        [JsonPropertyName("metaData")]
         public object Metadata { get; set; }
 
         [JsonPropertyName("protocol")]

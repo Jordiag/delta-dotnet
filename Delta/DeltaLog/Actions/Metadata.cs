@@ -52,10 +52,8 @@ namespace Delta.DeltaLog.Actions
         /// An array containing the names of columns by which the data should be partitioned.
         /// </summary>
         [JsonPropertyName("partitionColumns")]
-        [JsonRequired]
-        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public string[] PartitionColumns { get; set; }
-        #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public string[]? PartitionColumns { get; set; }
+
 
         /// <summary>
         /// The time when this metadata action is created, in milliseconds since the Unix epoch.
@@ -67,10 +65,7 @@ namespace Delta.DeltaLog.Actions
         /// A map containing configuration options for the metadata action.
         /// </summary>
         [JsonPropertyName("configuration")]
-        [JsonRequired]
-        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public Dictionary<string, string> Configuration { get; set; }
-        #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public Dictionary<string, string>? Configuration { get; set; }
     }
 
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using Delta.DeltaLog;
 using Delta.DeltaLog.Actions;
 using Parquet;
@@ -48,10 +49,8 @@ namespace Delta.Common
             }
         }
 
-        private static List<T> DeserialiseAction<T>(object? actionObj, JsonSerializerOptions options, string fileName)
+        private static T? DeserialiseAction<T>(object? actionObj, JsonSerializerOptions options, string fileName)
         {
-            var list = new List<T>();
-
             var action = default(T);
 
             try
@@ -61,15 +60,12 @@ namespace Delta.Common
                 {
                     action = Deserialises<T>(line, options, fileName);
                 }
-                if(action != null)
-                {
-                    list.Add(action);
-                }
-                return list;
+
+                return action;
             }
             catch(DeltaException)
             {
-                return list;
+                return action;
             }
         }
 
@@ -90,34 +86,37 @@ namespace Delta.Common
         /// <param name="options"></param>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static async Task<CheckPoint> ReadCheckPointAsync(Stream? fileStream, JsonSerializerOptions options, string fileName)
+        public static async Task<SortedList<int, IAction>> ReadCheckPointAsync(Stream? fileStream, JsonSerializerOptions options, string fileName)
         {
             CheckFileStream(fileStream);
 
-            CheckPoint checkPoint = new CheckPoint();
+            SortedList<int, IAction> checkPointSortedList = new SortedList<int, IAction>();
             Table table = await ParquetReader.ReadTableFromStreamAsync(fileStream);
 
             for(int i = 0; i < table.Count; i++)
             {
+                // TODO skip nulled values
                 string row = table[i].ToString().Replace('\'', '"');
-
+                IAction? action = default;
                 CheckpointRow? checkpointRow = Deserialises<CheckpointRow>(row, options, fileName);
 
-                List<Add> addList = DeserialiseAction<Add>(checkpointRow?.Add, options, fileName);
-                checkPoint.Adds = AddItems(checkPoint.Adds, addList);
-                List<Txn> txnList = DeserialiseAction<Txn>(checkpointRow?.Txn, options, fileName);
-                checkPoint.Txns = AddItems(checkPoint.Txns, txnList);
-                List<Remove> removeList = DeserialiseAction<Remove>(checkpointRow?.Remove, options, fileName);
-                checkPoint.Removes = AddItems(checkPoint.Removes, removeList);
-                List<CommitInfo> commitInfoList = DeserialiseAction<CommitInfo>(checkpointRow?.CommitInfo, options, fileName);
-                checkPoint.CommitInfos = AddItems(checkPoint.CommitInfos, commitInfoList);
-                List<Metadata> metadataList = DeserialiseAction<Metadata>(checkpointRow?.Metadata, options, fileName);
-                checkPoint.Metadatas = AddItems(checkPoint.Metadatas, metadataList);
-                List<Protocol> protocolList = DeserialiseAction<Protocol>(checkpointRow?.Protocol, options, fileName);
-                checkPoint.Protocols = AddItems(checkPoint.Protocols, protocolList);
+                action = DeserialiseAction<Add>(checkpointRow?.Add, options, fileName) ?? action;
+                action = DeserialiseAction<Txn>(checkpointRow?.Txn, options, fileName) ?? action;
+                action = DeserialiseAction<Remove>(checkpointRow?.Remove, options, fileName) ?? action;
+                action = DeserialiseAction<CommitInfo>(checkpointRow?.CommitInfo, options, fileName) ?? action;
+                action = DeserialiseAction<Metadata>(checkpointRow?.Metadata, options, fileName) ?? action;
+                action = DeserialiseAction<Protocol>(checkpointRow?.Protocol, options, fileName) ?? action;
+                if (action != null)
+                {
+                    checkPointSortedList.Add(i, action);
+                }
+                else
+                {
+                    throw new DeltaException("Action is null when this must be impossible deserialising checkpoint ones.");
+                }
             }
 
-            return checkPoint;
+            return checkPointSortedList;
         }
     }
 }

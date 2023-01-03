@@ -21,10 +21,11 @@ namespace Delta.Test
             {
                 PropertyNameCaseInsensitive = false,
             };
-            CheckPoint result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, basePath);
+            jsonOptions.Converters.Add(new DictionaryJsonConverter());
+            SortedList<int, DeltaLog.Actions.IAction> result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, basePath);
 
             // Assert
-            result.Adds.Should().BeNull();
+            result.Count.Should().Be(10);
         }
 
         [Fact]
