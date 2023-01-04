@@ -6,21 +6,21 @@ namespace Delta.Common
     public class CheckpointRow
     {
         [JsonPropertyName("txn")]
-        public object Txn { get; set; }
+        public object? Txn { get; set; }
 
         [JsonPropertyName("add")]
-        public object Add { get; set; }
+        public object? Add { get; set; }
 
         [JsonPropertyName("remove")]
-        public object Remove { get; set; }
+        public object? Remove { get; set; }
 
         [JsonPropertyName("metaData")]
-        public object Metadata { get; set; }
+        public object? Metadata { get; set; }
 
         [JsonPropertyName("protocol")]
-        public object Protocol { get; set; }
+        public object? Protocol { get; set; }
 
         [JsonPropertyName("commitInfo")]
-        public object CommitInfo { get; set; }
+        public object? CommitInfo { get; set; }
     }
 }

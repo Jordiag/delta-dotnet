@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Delta.Common;
-using Delta.DeltaLog;
 using Delta.Storage;
 using Parquet.Data;
 
@@ -20,6 +19,7 @@ namespace Delta.Test
             var jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = false,
+                WriteIndented = true
             };
             jsonOptions.Converters.Add(new DictionaryJsonConverter());
             SortedList<int, DeltaLog.Actions.IAction> result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, basePath);

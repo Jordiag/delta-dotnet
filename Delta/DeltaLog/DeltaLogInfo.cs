@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json;
 using Delta.Common;
 using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
@@ -38,7 +41,7 @@ namespace Delta.DeltaLog
             }
             else
             {
-                await LoadLogActionsWithCheckpointAsync();
+                SortedList<int, IAction>? deltaLogActions = await LoadLogActionsWithCheckpointAsync();
             }
         }
 
@@ -48,85 +51,131 @@ namespace Delta.DeltaLog
         /// </summary>
         /// <returns></returns>
         /// <exception cref="DeltaException"></exception>
-        private async Task LoadLogActionsWithCheckpointAsync()
+        private async Task<SortedList<int, IAction>?> LoadLogActionsWithCheckpointAsync()
         {
             if(_deltaTable == null || _deltaTable.DeltaLog == null)
             {
                 throw new DeltaException("Explorer deltaTable is null or deltaTable.DeltaLog is null.");
             }
-            string? checkpointFileName = null;
 
-            if(_deltaTable.DeltaLog.LastCheckPointFile != null)
-            {
+            CheckPointFile? checkPointFile = GetCheckPointFile();
+            string?  checkpointFileName = checkPointFile?.Name;
+            long?  checkpointFileIndex = checkPointFile?.Index;
 
-                string lastCheckpointPath =
-                    $"{_deltaTable.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{_deltaTable.DeltaLog.LastCheckPointFile.Name}";
+            SortedList<int, IAction>?  sortedActionsList = await GetCheckPointActionsAsync(checkpointFileName);
+            return await ReadJsonLogFilesAsync(sortedActionsList, checkpointFileIndex);
+        }
 
-                string line = File.ReadLines(lastCheckpointPath).ToArray()[0];
-
-                LastCheckPoint? lastCheckPoint = Deserialise<LastCheckPoint>(line, GetJsonSerializerOptions(), lastCheckpointPath);
-
-                if(lastCheckPoint == null)
-                {
-                    throw new DeltaException($"Failed to deserialise {Constants.LastCheckPointName} from this file {lastCheckpointPath}");
-                }
-
-                try
-                {
-                    checkpointFileName = _deltaTable.DeltaLog.CheckPointFiles?.SingleOrDefault(file => file.Index == lastCheckPoint.Version)?.Name;
-                }
-                catch(ArgumentNullException ex)
-                {
-                    throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
-                }
-                catch(InvalidOperationException ex)
-                {
-                    throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
-                }
-            }
-            else
-            {
-                long? max = _deltaTable.DeltaLog.CheckPointFiles.Max(checkPoint => checkPoint.Index);
-                if (max != null)
-                {
-                    checkpointFileName = _deltaTable.DeltaLog.CheckPointFiles?.FirstOrDefault(checkPoint => checkPoint.Index == max)?.Name;
-                }
-            }
-
-
+        private async Task<SortedList<int, IAction>?> GetCheckPointActionsAsync(string? checkpointFileName)
+        {
             if(checkpointFileName == null)
             {
                 throw new DeltaException($"Failed to find the last CheckPoint file in: {_deltaTable.BasePath}{Path.DirectorySeparatorChar}{Constants.DeltaLogName}");
             }
+
+            return await GetActionsFromParquetfileAsync(checkpointFileName);
+        }
+
+        private async Task<SortedList<int, IAction>> GetActionsFromParquetfileAsync(string checkpointFileName)
+        {
+            Stream? stream = null;
+            string checkpointPath =
+                $"{_deltaTable?.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{checkpointFileName}";
+            try
+            {
+                FileSystem.GetFileStream(checkpointPath, ref stream);
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = _deltaOptions.DeserialiseCaseInsensitive,
+                };
+                jsonOptions.Converters.Add(new DictionaryJsonConverter());
+
+                return await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
+            }
+            catch(DeltaException ex)
+            {
+                throw new DeltaException($"Failed to load checkpoint data: {checkpointPath}", ex);
+            }
+            finally
+            {
+                stream?.Dispose();
+            }
+        }
+
+        private CheckPointFile? GetCheckPointFile()
+        {
+            if(_deltaTable?.DeltaLog?.LastCheckPointFile != null)
+            {
+                return GetLastCheckPoint();
+            }
             else
             {
-                string checkpointPath =
-                    $"{_deltaTable?.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{checkpointFileName}";
-
-                Stream? stream = null;
-                try
+                long? max = _deltaTable?.DeltaLog?.CheckPointFiles.Max(checkPoint => checkPoint.Index);
+                if(max != null)
                 {
-                    FileSystem.GetFileStream(checkpointPath, ref stream);
-                    var jsonOptions = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = _deltaOptions.DeserialiseCaseInsensitive,
-                    };
-                    jsonOptions.Converters.Add(new DictionaryJsonConverter());
-
-                    SortedList<int, IAction> result = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
+                    return _deltaTable?.DeltaLog?.CheckPointFiles?.FirstOrDefault(checkPoint => checkPoint.Index == max);
                 }
-                catch(DeltaException ex)
-                {
-                    throw new DeltaException($"Failed to load checkpoint data: {checkpointPath}", ex);
-                }
-                finally
-                {
-                    stream?.Dispose();
-                }
-
-
-                // I left it here
             }
+
+            return null;
+        }
+
+        private CheckPointFile? GetLastCheckPoint()
+        {
+            string? lastCheckPointName = _deltaTable?.DeltaLog?.LastCheckPointFile?.Name;
+            if (_deltaTable == null || lastCheckPointName == null)
+            {
+                return null;
+            }
+
+            string lastCheckpointPath =
+                $"{_deltaTable.BasePath}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{lastCheckPointName}";
+
+            string line = File.ReadLines(lastCheckpointPath).ToArray()[0];
+
+            LastCheckPoint? lastCheckPoint = Deserialise<LastCheckPoint>(line, GetJsonSerializerOptions(), lastCheckpointPath);
+
+            if(lastCheckPoint == null)
+            {
+                throw new DeltaException($"Failed to deserialise {Constants.LastCheckPointName} from this file {lastCheckpointPath}");
+            }
+
+            try
+            {
+                return _deltaTable?.DeltaLog?.CheckPointFiles?.SingleOrDefault(file => file.Index == lastCheckPoint.Version);
+            }
+            catch(ArgumentNullException ex)
+            {
+                throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
+            }
+            catch(InvalidOperationException ex)
+            {
+                throw new DeltaException($"Failed to find CheckPoint file with index: {lastCheckPoint.Version}", ex);
+            }
+        }
+
+        private async Task<SortedList<int, IAction>?> ReadJsonLogFilesAsync(SortedList<int, IAction>? sortedActionsList, long? checkpointFileIndex)
+        {
+            int? start = sortedActionsList?.Count;
+            long? max = _deltaTable?.DeltaLog?.CheckPointFiles.Max(checkPoint => checkPoint.Index);
+            for(long? i = checkpointFileIndex + 1; i < max; i++)
+            {
+                LogFile? currentLogFile = _deltaTable?.DeltaLog?.LogFiles.FirstOrDefault(file => file.Index == i);
+                if(currentLogFile != null && sortedActionsList != null)
+                {
+                    SortedList<int, IAction> actionSortedList = await GetActionsFromParquetfileAsync(currentLogFile.Name);
+                    if (actionSortedList.Count > 0 && start != null)
+                    {
+                        for(int c = 0; c < actionSortedList.Count; c++)
+                        {
+                            sortedActionsList.Add(start.Value, actionSortedList[c]);
+                        }
+
+                    }
+                }
+            }
+
+            return sortedActionsList;
         }
 
         private void LoadLogActions()
