@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Delta.Common;
 using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.DeltaLog;
 using Delta.Storage;
-using Parquet.Data.Rows;
+
+// TODO check non repeateable actions when laoded
 
 namespace Delta.DeltaLog
 {
@@ -15,25 +13,17 @@ namespace Delta.DeltaLog
     {
         private readonly DeltaTable _deltaTable;
         private readonly DeltaOptions _deltaOptions;
-        internal Protocol? Protocol { get; private set; }
-        internal Metadata? Metadata { get; private set; }
-        internal List<CommitInfo> CommitinfoList { get; private set; }
-        internal List<Add> AddList { get; private set; }
-        internal List<Remove> RemoveList { get; private set; }
-        internal List<Txn> TxnList { get; private set; }
+
+        internal SortedList<int, IAction> DeltaLogActionList { get; }
 
         public DeltaLogInfo(DeltaTable deltaTable, DeltaOptions deltaOptions)
         {
-            _deltaTable = deltaTable ??
-                    throw new DeltaException("Explorer deltaTable is null, Delta table explorer must return a not null result.");
+            _deltaTable = deltaTable;
             _deltaOptions = deltaOptions;
-            CommitinfoList = new List<CommitInfo>();
-            AddList = new List<Add>();
-            RemoveList = new List<Remove>();
-            TxnList = new List<Txn>();
+            DeltaLogActionList = new SortedList<int, IAction>();
         }
 
-        internal async Task ReadTransactionLogAsync()
+        internal async Task LoadDeltaLogActionsAsync()
         {
             if(!CheckPointExist())
             {
@@ -41,42 +31,23 @@ namespace Delta.DeltaLog
             }
             else
             {
-                SortedList<int, IAction>? deltaLogActions = await LoadLogActionsWithCheckpointAsync();
+                CheckPointFile? checkPointFile = GetCheckPointFile();
+                await GetCheckPointActionsAsync(checkPointFile);
+                await ReadJsonLogFilesAsync(sortedActionsList, checkPointFilex);
             }
         }
 
-        /// <summary>
-        /// Loads all log actions considering checkpoint if exist.
-        /// ASSUMPTION: _last_checkpoint file is considered optional.
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="DeltaException"></exception>
-        private async Task<SortedList<int, IAction>?> LoadLogActionsWithCheckpointAsync()
-        {
-            if(_deltaTable == null || _deltaTable.DeltaLog == null)
-            {
-                throw new DeltaException("Explorer deltaTable is null or deltaTable.DeltaLog is null.");
-            }
-
-            CheckPointFile? checkPointFile = GetCheckPointFile();
-            string?  checkpointFileName = checkPointFile?.Name;
-            long?  checkpointFileIndex = checkPointFile?.Index;
-
-            SortedList<int, IAction>?  sortedActionsList = await GetCheckPointActionsAsync(checkpointFileName);
-            return await ReadJsonLogFilesAsync(sortedActionsList, checkpointFileIndex);
-        }
-
-        private async Task<SortedList<int, IAction>?> GetCheckPointActionsAsync(string? checkpointFileName)
+        private async Task GetCheckPointActionsAsync(string? checkpointFileName)
         {
             if(checkpointFileName == null)
             {
                 throw new DeltaException($"Failed to find the last CheckPoint file in: {_deltaTable.BasePath}{Path.DirectorySeparatorChar}{Constants.DeltaLogName}");
             }
 
-            return await GetActionsFromParquetfileAsync(checkpointFileName);
+            await GetActionsFromParquetfileAsync(checkpointFileName);
         }
 
-        private async Task<SortedList<int, IAction>> GetActionsFromParquetfileAsync(string checkpointFileName)
+        private async Task GetActionsFromParquetfileAsync(string checkpointFileName)
         {
             Stream? stream = null;
             string checkpointPath =
@@ -90,7 +61,13 @@ namespace Delta.DeltaLog
                 };
                 jsonOptions.Converters.Add(new DictionaryJsonConverter());
 
-                return await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
+                SortedList<int, IAction> checkPointActionList = await ParquetClient.ReadCheckPointAsync(stream, jsonOptions, checkpointFileName);
+                for(int i = checkPointActionList.First().Key; i <= checkPointActionList.Last().Key; i++)
+                {
+                    IAction checkPointAction = checkPointActionList[i];
+                    DeltaLogActionList.Add(i, checkPointAction);
+                }
+
             }
             catch(DeltaException ex)
             {
@@ -111,7 +88,7 @@ namespace Delta.DeltaLog
             else
             {
                 long? max = _deltaTable?.DeltaLog?.CheckPointFiles.Max(checkPoint => checkPoint.Index);
-                if(max != null)
+                if(max.HasValue)
                 {
                     return _deltaTable?.DeltaLog?.CheckPointFiles?.FirstOrDefault(checkPoint => checkPoint.Index == max);
                 }
@@ -123,7 +100,7 @@ namespace Delta.DeltaLog
         private CheckPointFile? GetLastCheckPoint()
         {
             string? lastCheckPointName = _deltaTable?.DeltaLog?.LastCheckPointFile?.Name;
-            if (_deltaTable == null || lastCheckPointName == null)
+            if(_deltaTable == null || lastCheckPointName == null)
             {
                 return null;
             }
@@ -154,17 +131,17 @@ namespace Delta.DeltaLog
             }
         }
 
-        private async Task<SortedList<int, IAction>?> ReadJsonLogFilesAsync(SortedList<int, IAction>? sortedActionsList, long? checkpointFileIndex)
+        private async Task<SortedList<int, IAction>?> ReadJsonLogFilesAsync(SortedList<int, IAction>? sortedActionsList, long? logFileIndex)
         {
             int? start = sortedActionsList?.Count;
-            long? max = _deltaTable?.DeltaLog?.CheckPointFiles.Max(checkPoint => checkPoint.Index);
-            for(long? i = checkpointFileIndex + 1; i < max; i++)
+            long? max = _deltaTable?.DeltaLog?.LogFiles.Max(checkPoint => checkPoint.Index);
+            for(long? i = logFileIndex + 1 ; i <= max; i++)
             {
                 LogFile? currentLogFile = _deltaTable?.DeltaLog?.LogFiles.FirstOrDefault(file => file.Index == i);
                 if(currentLogFile != null && sortedActionsList != null)
                 {
                     SortedList<int, IAction> actionSortedList = await GetActionsFromParquetfileAsync(currentLogFile.Name);
-                    if (actionSortedList.Count > 0 && start != null)
+                    if(actionSortedList.Count > 0 && start.HasValue)
                     {
                         for(int c = 0; c < actionSortedList.Count; c++)
                         {
@@ -184,42 +161,52 @@ namespace Delta.DeltaLog
             {
                 foreach(LogFile logFile in _deltaTable.DeltaLog.LogFiles)
                 {
-                    string dataPath =
-                        $"{_deltaTable.BasePath}{Path.DirectorySeparatorChar}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{logFile.Name}";
-                    IEnumerable<string> fileLines = File.ReadLines(dataPath);
-                    foreach(string line in fileLines)
-                    {
-                        (ActionType actionType, string line) action = GetAction(line, logFile);
-                        switch(action.actionType)
-                        {
-                            case ActionType.Protocol:
-                                Protocol? protocol = Deserialise<Protocol?>(action.line, GetJsonSerializerOptions(), logFile.Name);
-                                Protocol = GetAction(protocol, Protocol, logFile);
-                                break;
-                            case ActionType.Add:
-                                Add? add = Deserialise<Add?>(action.line, GetJsonSerializerOptions(), logFile.Name);
-                                AddToList(add, AddList);
-                                break;
-                            case ActionType.Remove:
-                                Remove? remove = Deserialise<Remove?>(action.line, GetJsonSerializerOptions(), logFile.Name);
-                                AddToList(remove, RemoveList);
-                                break;
-                            case ActionType.Metadata:
-                                Metadata? metadata = Deserialise<Metadata?>(action.line, GetJsonSerializerOptions(), logFile.Name);
-                                Metadata = GetAction(metadata, Metadata, logFile);
-                                break;
-                            case ActionType.Txn:
-                                Txn? txn = Deserialise<Txn?>(action.line, GetJsonSerializerOptions(), logFile.Name);
-                                AddToList(txn, TxnList);
-                                break;
-                            case ActionType.CommitInfo:
-                                CommitInfo? commitInfo = Deserialise<CommitInfo?>(action.line, GetJsonSerializerOptions(), logFile.Name);
-                                AddToList(commitInfo, CommitinfoList);
-                                break;
-                        }
-                    }
                 }
             }
+        }
+
+        private SortedList<int, IAction> GetLogFileActions(SortedList<int, IAction> actionList, LogFile logFile, string line)
+        {
+            string dataPath =
+                $"{_deltaTable.BasePath}{Path.DirectorySeparatorChar}{Constants.DeltaLogName}{Path.DirectorySeparatorChar}{logFile.Name}";
+            IEnumerable<string> fileLines = File.ReadLines(dataPath);
+            int last = actionList.Last().Key;
+            for(int i = last + 1; i < fileLines.Count(); i++)
+            {
+                (ActionType actionType, string line) action = GetAction(line, logFile);
+                switch(action.actionType)
+                {
+                    case ActionType.Protocol:
+                        Protocol? protocol = Deserialise<Protocol?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                        if (protocol != null)
+                        {
+                            DeltaLogActionList.Add(DeltaLogActionList.Last().Key + 1, protocol);
+                        }
+                        AddToList(protocol);
+                        break;
+                    case ActionType.Add:
+                        Add? add = Deserialise<Add?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                        AddToList(add);
+                        break;
+                    case ActionType.Remove:
+                        Remove? remove = Deserialise<Remove?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                        AddToList(remove);
+                        break;
+                    case ActionType.Metadata:
+                        Metadata? metadata = Deserialise<Metadata?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                        AddToList(metadata);
+                        break;
+                    case ActionType.Txn:
+                        Txn? txn = Deserialise<Txn?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                        AddToList(txn);
+                        break;
+                    case ActionType.CommitInfo:
+                        CommitInfo? commitInfo = Deserialise<CommitInfo?>(action.line, GetJsonSerializerOptions(), logFile.Name);
+                        AddToList(commitInfo);
+                        break;
+                }
+            }
+
         }
 
         private static T? Deserialise<T>(string line, JsonSerializerOptions options, string fileName)
@@ -243,11 +230,11 @@ namespace Delta.DeltaLog
             }
         }
 
-        private static void AddToList<T>(T? action, List<T> list)
+        private void AddToList<T>(T? action)
         {
             if(action != null)
             {
-                list.Add(action);
+                DeltaLogActionList.Add(DeltaLogActionList.Last().Key + 1, (IAction)action);
             }
         }
 
@@ -259,7 +246,7 @@ namespace Delta.DeltaLog
             };
         }
 
-        private static T? GetAction<T>(T? action, T? property, LogFile logFile)
+        private static T GetAction<T>(T? action, T? property, LogFile logFile)
         {
             return property == null
                     ? action ?? throw new DeltaException($"{nameof(property)} action parsed from Json is null. File: {logFile.Name}")
@@ -316,3 +303,4 @@ namespace Delta.DeltaLog
                 : throw new DeltaException("DeltaLog can't be null after being loaded by Explorer.");
     }
 }
+ 

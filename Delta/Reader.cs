@@ -32,7 +32,7 @@ namespace Delta
         {
             DeltaLogInfo deltaLog = new DeltaLogInfo(_deltaTable, new DeltaOptions());
 
-            await deltaLog.ReadTransactionLogAsync();
+            await deltaLog.LoadDeltaLogActionsAsync();
 
             return Array.Empty<DataColumn>();
         }

@@ -28,7 +28,7 @@ namespace Delta.Common
         {
             CheckFileStream(fileStream);
 
-            SortedList<int, IAction> checkPointSortedList = new SortedList<int, IAction>();
+            var checkPointSortedList = new SortedList<int, IAction>();
             Table table = await ParquetReader.ReadTableFromStreamAsync(fileStream);
 
             for(int i = 0; i < table.Count; i++)
