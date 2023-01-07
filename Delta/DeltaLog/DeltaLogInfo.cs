@@ -4,6 +4,7 @@ using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.DeltaLog;
 using Delta.Storage;
+using Parquet.Data.Rows;
 
 namespace Delta.DeltaLog
 {
@@ -13,12 +14,16 @@ namespace Delta.DeltaLog
         private readonly DeltaOptions _deltaOptions;
 
         internal SortedList<int, IAction> DeltaLogActionList { get; }
+        internal SortedList<int, Row> AddRows { get; }
+        internal SortedList<int, Row> RemoveRows { get; }
 
         public DeltaLogInfo(DeltaTable deltaTable, DeltaOptions deltaOptions)
         {
             _deltaTable = deltaTable;
             _deltaOptions = deltaOptions;
             DeltaLogActionList = new SortedList<int, IAction>();
+            AddRows= new SortedList<int, Row>();
+            RemoveRows= new SortedList<int, Row>();
         }
 
         internal async Task LoadDeltaLogActionsAsync()

@@ -11,8 +11,4 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.13.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Delta\Delta.csproj" />
-  </ItemGroup>
-
 </Project>

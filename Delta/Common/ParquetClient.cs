@@ -21,8 +21,7 @@ namespace Delta.Common
         /// </summary>
         /// <param name="fileStream">Checkpoint parquet file stream.</param>
         /// <param name="deltaOptions"></param>
-        /// <param name="options">Json serializer pptions.</param>
-        /// <param name="fileName">Checkpoint parquet file name.   </param>
+        /// <param name="fileName">Checkpoint parquet file name.</param>
         /// <returns></returns>
         public static async Task<SortedList<int, IAction>> ReadCheckPointAsync(Stream? fileStream, DeltaOptions deltaOptions, string fileName)
         {

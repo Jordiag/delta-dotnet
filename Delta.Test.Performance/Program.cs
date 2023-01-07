@@ -1,7 +1,7 @@
 ﻿using BenchmarkDotNet.Running;
-using Delta.Performance.Explorer;
+using Delta.Test.Performance.Explorer;
 
-namespace Delta.Performance
+namespace Delta.Test.Performance
 {
     internal class Program
     {

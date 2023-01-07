@@ -1,11 +1,12 @@
 ﻿using BenchmarkDotNet.Attributes;
 
-namespace Delta.Performance.Explorer
+namespace Delta.Test.Performance.Explorer
 {
+    [MemoryDiagnoser]
     internal partial class ExplorerPerformance
     {
         [Benchmark]
-        public void SampleTestV2()
+        public void SampleTestV1()
         {
         }
     }
