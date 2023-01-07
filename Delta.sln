@@ -16,6 +16,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Performace", "Performace", "{7AE6CFB3-35E0-404B-8CDB-F91BC1D732A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Delta.Performance", "Delta.Performance\Delta.Performance.csproj", "{EE1EBF1C-8E07-4410-BF2C-176CF95F8B0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +34,10 @@ Global
 		{05FE39A4-8A68-44F1-B908-C9713F0D9932}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05FE39A4-8A68-44F1-B908-C9713F0D9932}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05FE39A4-8A68-44F1-B908-C9713F0D9932}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE1EBF1C-8E07-4410-BF2C-176CF95F8B0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE1EBF1C-8E07-4410-BF2C-176CF95F8B0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE1EBF1C-8E07-4410-BF2C-176CF95F8B0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE1EBF1C-8E07-4410-BF2C-176CF95F8B0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -37,6 +45,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{F86644B3-3163-44B9-8E6D-A6DCA740A42A} = {7D58B8E2-2DB1-4952-8BA6-674C41CCDEC1}
 		{05FE39A4-8A68-44F1-B908-C9713F0D9932} = {CA0E6221-91E7-4EAC-B534-70A11AEC155B}
+		{EE1EBF1C-8E07-4410-BF2C-176CF95F8B0E} = {7AE6CFB3-35E0-404B-8CDB-F91BC1D732A4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0CDE529E-7D78-4F3D-8ABE-165334B3E5E1}

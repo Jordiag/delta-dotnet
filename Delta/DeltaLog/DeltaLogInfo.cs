@@ -4,9 +4,6 @@ using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.DeltaLog;
 using Delta.Storage;
-using Thrift.Protocol;
-
-// TODO check non repeateable actions when laoded
 
 namespace Delta.DeltaLog
 {
@@ -36,6 +33,8 @@ namespace Delta.DeltaLog
                 long nextIndex = await GetActionsFromParquetfileAsync(checkPointFile);
                 LoadLogActions(nextIndex);
             }
+            // TODO check non repeateable actions when laoded
+            // TODO actions need to set sizes and mandatories removing nullables
         }
 
         private async Task<long> GetActionsFromParquetfileAsync(CheckPointFile? checkpointFile)
@@ -144,7 +143,7 @@ namespace Delta.DeltaLog
 
         private void GetLogFileActions(LogFile? logFile)
         {
-            if (logFile == null)
+            if(logFile == null)
             {
                 return;
             }
@@ -178,7 +177,7 @@ namespace Delta.DeltaLog
                     case ActionType.CommitInfo:
                         action = JsonSerialiser.Deserialise<CommitInfo?>(actionInfo.line, logFile.Name, _deltaOptions);
                         break;
-        }
+                }
                 AddToList(action);
             }
         }
@@ -241,4 +240,3 @@ namespace Delta.DeltaLog
                 : throw new DeltaException("DeltaLog can't be null after being loaded by Explorer.");
     }
 }
- 

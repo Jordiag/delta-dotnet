@@ -2,7 +2,6 @@
 
 namespace Delta.DeltaLog
 {
-    // TODO needs to set sizes and mandatories removing nullables
     public class CheckPoint
     {
         public List<Cdc> Cdcs { get; set; }
