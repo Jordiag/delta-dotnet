@@ -6,7 +6,7 @@ namespace Delta.Common
     /// <summary>
     /// 
     /// </summary>
-    public class DictionaryJsonConverter : JsonConverter<IDictionary<string, string?>> 
+    public class DictionaryConverter : JsonConverter<IDictionary<string, string>> 
     {
         /// <summary>
         /// 
@@ -15,8 +15,7 @@ namespace Delta.Common
         /// <returns></returns>
         public override bool CanConvert(Type typeToConvert)
         {
-            return typeToConvert == typeof(Dictionary<string, string>)
-                   || typeToConvert == typeof(Dictionary<string, string?>);
+            return typeToConvert == typeof(Dictionary<string, string>);
         }
 
         /// <summary>
@@ -28,7 +27,7 @@ namespace Delta.Common
         /// <returns></returns>
         public override Dictionary<string, string?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            if(reader.TokenType != JsonTokenType.StartArray)
+            if(reader.TokenType != JsonTokenType.StartArray && reader.TokenType != JsonTokenType.StartObject)
             {
                 throw new JsonException($"JsonTokenType was of type {reader.TokenType}, only objects are supported");
             }
@@ -41,9 +40,11 @@ namespace Delta.Common
                     return dictionary;
                 }
 
-                if(reader.TokenType != JsonTokenType.PropertyName)
+                JsonTokenType tokenType = reader.TokenType;
+
+                if(tokenType != JsonTokenType.PropertyName)
                 {
-                    throw new JsonException("JsonTokenType was not PropertyName");
+                    return tokenType == JsonTokenType.EndObject ? dictionary : throw new JsonException("JsonTokenType was not PropertyName");
                 }
 
                 string? propertyName = reader.GetString();

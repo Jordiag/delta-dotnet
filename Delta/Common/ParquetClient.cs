@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Delta.DeltaLog.Actions;
+﻿using Delta.DeltaLog.Actions;
 using Parquet;
 using Parquet.Data.Rows;
 
@@ -21,10 +20,11 @@ namespace Delta.Common
         /// Reads a checkpoint parquet file.
         /// </summary>
         /// <param name="fileStream">Checkpoint parquet file stream.</param>
+        /// <param name="deltaOptions"></param>
         /// <param name="options">Json serializer pptions.</param>
         /// <param name="fileName">Checkpoint parquet file name.   </param>
         /// <returns></returns>
-        public static async Task<SortedList<int, IAction>> ReadCheckPointAsync(Stream? fileStream, JsonSerializerOptions options, string fileName)
+        public static async Task<SortedList<int, IAction>> ReadCheckPointAsync(Stream? fileStream, DeltaOptions deltaOptions, string fileName)
         {
             CheckFileStream(fileStream);
 
@@ -36,15 +36,15 @@ namespace Delta.Common
 
                 string row = table[i].ToString().Replace('\'', '"');
                 IAction? action = default;
-                CheckpointRow? checkpointRow = Deserialises<CheckpointRow>(row, options, fileName);
+                CheckpointRow? checkpointRow = JsonSerialiser.Deserialise<CheckpointRow>(row, fileName, deltaOptions);
                 EliminateNulls(checkpointRow);
 
-                action = DeserialiseAction<Add>(checkpointRow?.Add, options, fileName) ?? action;
-                action = DeserialiseAction<Txn>(checkpointRow?.Txn, options, fileName) ?? action;
-                action = DeserialiseAction<Remove>(checkpointRow?.Remove, options, fileName) ?? action;
-                action = DeserialiseAction<CommitInfo>(checkpointRow?.CommitInfo, options, fileName) ?? action;
-                action = DeserialiseAction<Metadata>(checkpointRow?.Metadata, options, fileName) ?? action;
-                action = DeserialiseAction<Protocol>(checkpointRow?.Protocol, options, fileName) ?? action;
+                action = DeserialiseAction<Add>(checkpointRow?.Add, deltaOptions, fileName) ?? action;
+                action = DeserialiseAction<Txn>(checkpointRow?.Txn, deltaOptions, fileName) ?? action;
+                action = DeserialiseAction<Remove>(checkpointRow?.Remove, deltaOptions, fileName) ?? action;
+                action = DeserialiseAction<CommitInfo>(checkpointRow?.CommitInfo, deltaOptions, fileName) ?? action;
+                action = DeserialiseAction<Metadata>(checkpointRow?.Metadata, deltaOptions, fileName) ?? action;
+                action = DeserialiseAction<Protocol>(checkpointRow?.Protocol, deltaOptions, fileName) ?? action;
                 if(action != null)
                 {
                     checkPointSortedList.Add(i, action);
@@ -67,28 +67,7 @@ namespace Delta.Common
             }
         }
 
-        private static T? Deserialises<T>(string line, JsonSerializerOptions options, string fileName)
-        {
-            try
-            {
-                T? action = JsonSerializer.Deserialize<T>(line, options);
-                return action;
-            }
-            catch(ArgumentNullException ex)
-            {
-                throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
-            }
-            catch(NotSupportedException ex)
-            {
-                throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
-            }
-            catch(JsonException ex)
-            {
-                throw new DeltaException($"Failed to deserialise this line: {line} from this file {fileName}", ex);
-            }
-        }
-
-        private static T? DeserialiseAction<T>(object? actionObj, JsonSerializerOptions options, string fileName)
+        private static T? DeserialiseAction<T>(object? actionObj, DeltaOptions deltaOptions, string fileName)
         {
             var action = default(T);
             if(actionObj == null)
@@ -99,7 +78,7 @@ namespace Delta.Common
             string? line = actionObj?.ToString();
             if(!string.IsNullOrEmpty(line))
             {
-                action = Deserialises<T>(line, options, fileName);
+                action = JsonSerialiser.Deserialise<T>(line, fileName, deltaOptions);
             }
 
             return action;
