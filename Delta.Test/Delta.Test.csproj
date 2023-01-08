@@ -114,9 +114,6 @@
     <None Update="Data\delta-0.2.0\_delta_log\00000000000000000002.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\delta-0.2.0\_delta_log\00000000000000000004.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Data\delta-0.2.0\_delta_log\00000000000000000003.checkpoint.parquet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

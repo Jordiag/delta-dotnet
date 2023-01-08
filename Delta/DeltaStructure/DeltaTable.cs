@@ -1,6 +1,7 @@
 ﻿using Delta.DeltaStructure.Common;
 using Delta.DeltaStructure.Data;
 using Delta.DeltaStructure.DeltaLog;
+using Parquet.Data.Rows;
 
 namespace Delta.DeltaStructure
 {

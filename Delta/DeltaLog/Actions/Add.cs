@@ -5,7 +5,7 @@ namespace Delta.DeltaLog.Actions
     /// <summary>
     /// The add action are used to modify the data in a table by adding  individual logical files respectively.
     /// </summary>
-    public class Add : IAction
+    public class Add : IAction, ITableData
     {
         /// <summary>
         /// A relative path to a data file from the root of the table or an absolute path to a file that should be added to the table.

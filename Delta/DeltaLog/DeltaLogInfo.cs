@@ -1,9 +1,16 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Generic;
+using System.Data.Common;
+using System.IO;
+using System.IO.Pipes;
+using System.Linq;
+using System.Text.Json;
+using System.Xml.Schema;
 using Delta.Common;
 using Delta.DeltaLog.Actions;
 using Delta.DeltaStructure;
 using Delta.DeltaStructure.DeltaLog;
 using Delta.Storage;
+using Parquet.Data;
 using Parquet.Data.Rows;
 
 namespace Delta.DeltaLog
@@ -14,16 +21,17 @@ namespace Delta.DeltaLog
         private readonly DeltaOptions _deltaOptions;
 
         internal SortedList<int, IAction> DeltaLogActionList { get; }
-        internal SortedList<int, Row> AddRows { get; }
-        internal SortedList<int, Row> RemoveRows { get; }
+        internal HashSet<Row> DeltaTable { get; }
+
 
         public DeltaLogInfo(DeltaTable deltaTable, DeltaOptions deltaOptions)
         {
             _deltaTable = deltaTable;
             _deltaOptions = deltaOptions;
             DeltaLogActionList = new SortedList<int, IAction>();
-            AddRows= new SortedList<int, Row>();
-            RemoveRows= new SortedList<int, Row>();
+            var valueColumn = new DataColumn(new DataField<string>("value"), Array.Empty<int>());
+            var schema = new Schema(valueColumn.Field);
+            DeltaTable = new HashSet<Row>();
         }
 
         internal async Task LoadDeltaLogActionsAsync()
@@ -38,8 +46,60 @@ namespace Delta.DeltaLog
                 long nextIndex = await GetActionsFromParquetfileAsync(checkPointFile);
                 LoadLogActions(nextIndex);
             }
+            LoadParquetData();
             // TODO check non repeateable actions when laoded
             // TODO actions need to set sizes and mandatories removing nullables
+        }
+
+        private async Task LoadParquetData()
+        {
+            //TODO ensure order
+            for(int i = 0; i < DeltaLogActionList.Count; i++)
+            {
+                IAction action = DeltaLogActionList[i];
+                if(action is ITableData)
+                {
+                    Stream? stream = null;
+                    string parquetFilePath =
+                        $"{_deltaTable?.BasePath}{((ITableData)action).Path}";
+                    try
+                    {
+                        FileSystem.GetFileStream(parquetFilePath, ref stream);
+                        var jsonOptions = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = _deltaOptions.DeserialiseCaseInsensitive,
+                        };
+                        jsonOptions.Converters.Add(new DictionaryConverter());
+
+                        Queue<Row> actionTable = await ParquetClient.ReadActionTableDataAsync(stream, _deltaOptions);
+                        if (action is Add)
+                        {
+                            foreach(Row? row in actionTable)
+                            {
+                                if(!DeltaTable.Add(row))
+                                {
+                                    throw new DeltaException($"It was not possible to add this action {action}");
+                                }
+                            }
+
+                        }
+                        else if (action is Remove)
+                        {
+                            foreach(Row? row in actionTable)
+                            {
+                                int h = row.Values[0].GetHashCode();
+                                var h1 = DeltaTable.ToArray()[0].Values[0].GetHashCode();
+                                var h2 = DeltaTable.ToArray()[1].Values[0].GetHashCode();
+                                bool res = DeltaTable.Contains(row);
+                            }
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
         private async Task<long> GetActionsFromParquetfileAsync(CheckPointFile? checkpointFile)
@@ -62,10 +122,11 @@ namespace Delta.DeltaLog
                 jsonOptions.Converters.Add(new DictionaryConverter());
 
                 SortedList<int, IAction> checkPointActionList = await ParquetClient.ReadCheckPointAsync(stream, _deltaOptions, checkpointFile.Name);
-                for(int i = checkPointActionList.First().Key; i <= checkPointActionList.Last().Key; i++)
+                int last = checkPointActionList.Last().Key;
+                for(int i = last; i >= checkPointActionList.First().Key; i--)
                 {
                     IAction checkPointAction = checkPointActionList[i];
-                    DeltaLogActionList.Add(i, checkPointAction);
+                    DeltaLogActionList.Add(last - i, checkPointAction);
                 }
 
                 return checkpointFile.Index + 1;

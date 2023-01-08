@@ -5,7 +5,7 @@ namespace Delta.DeltaLog.Actions
     /// <summary>
     /// The remove action are used to modify the data in a table by removing individual logical files respectively.
     /// </summary>
-    public class Remove : IAction
+    public class Remove : IAction, ITableData
     {
         /// <summary>
         /// A relative path to a file from the root of the table or an absolute path to a file that should be removed from the table. 

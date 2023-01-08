@@ -1,4 +1,6 @@
 ﻿using Delta.DeltaLog.Actions;
+using Delta.DeltaStructure;
+using Microsoft.Extensions.Azure;
 using Parquet;
 using Parquet.Data.Rows;
 
@@ -55,6 +57,26 @@ namespace Delta.Common
             }
 
             return checkPointSortedList;
+        }
+
+        /// <summary>
+        /// Get Rows.
+        /// </summary>
+        /// <param name="fileStream"></param>
+        /// <param name="deltaOptions"></param>
+        /// <returns></returns>
+        public static async Task<Queue<Row>> ReadActionTableDataAsync(Stream? fileStream, DeltaOptions deltaOptions)
+        {
+            CheckFileStream(fileStream);
+            var rows = new Queue<Row>();
+            Table table = await ParquetReader.ReadTableFromStreamAsync(fileStream);
+            foreach(Row? row in table)
+            {
+                rows.Enqueue(row);
+            }
+
+            return rows;
+             
         }
 
         private static void CheckFileStream(Stream? fileStream)
