@@ -18,8 +18,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Delta.Test.Performance", "Delta.Test.Performance\Delta.Test.Performance.csproj", "{5F2C785B-81FC-4D7F-A90E-C9BC9AE262A5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parquet", "..\github related\parquet-dotnet\src\Parquet\Parquet.csproj", "{54B81903-04E9-453C-9908-F41670E902A8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,10 +36,6 @@ Global
 		{5F2C785B-81FC-4D7F-A90E-C9BC9AE262A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F2C785B-81FC-4D7F-A90E-C9BC9AE262A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F2C785B-81FC-4D7F-A90E-C9BC9AE262A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{54B81903-04E9-453C-9908-F41670E902A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54B81903-04E9-453C-9908-F41670E902A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{54B81903-04E9-453C-9908-F41670E902A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54B81903-04E9-453C-9908-F41670E902A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -31,7 +31,7 @@ namespace Delta.DeltaLog
             DeltaLogActionList = new SortedList<int, IAction>();
             var valueColumn = new DataColumn(new DataField<string>("value"), Array.Empty<int>());
             var schema = new Schema(valueColumn.Field);
-            DeltaTable = new HashSet<Row>();
+            DeltaTable = new HashSet<Row>(new RowComparer());
         }
 
         internal async Task LoadDeltaLogActionsAsync()
@@ -87,10 +87,10 @@ namespace Delta.DeltaLog
                         {
                             foreach(Row? row in actionTable)
                             {
-                                int h = row.Values[0].GetHashCode();
-                                var h1 = DeltaTable.ToArray()[0].Values[0].GetHashCode();
-                                var h2 = DeltaTable.ToArray()[1].Values[0].GetHashCode();
-                                bool res = DeltaTable.Contains(row);
+                                if(DeltaTable.Contains(row))
+                                {
+                                    DeltaTable.Remove(row);
+                                }
                             }
                         }
                     }
